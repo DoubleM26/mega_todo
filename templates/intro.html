@@ -13,18 +13,41 @@
     <title>Mega ToDo</title>
 </head>
 <body>
+<header>
+    <nav class="navbar navbar-light" style="background-color: #e3f2fd;" >
+
+        {% if current_user.is_authenticated %}
+        <a class="navbar-brand" href="/tasks">Mega ToDo</a>
+        <div>
+    <a class="navbar-brand" href="/settings">{{ current_user.name }}</a>
+          <a type="button" class="btn btn-primary btn-lg px-4 me-md-2" href="/logout">Выйти</a></div>
+{% else %}
+        <a class="navbar-brand">Mega ToDo</a>
+    <p>
+        <a class="btn btn-primary " href="/register">Зарегистрироваться</a>
+        <a class="btn btn-success" href="/login">Войти</a>
+    </p>
+{% endif %}
+    </nav>
+</header>
 <div class="container col-xxl-8 px-4 py-5">
     <div class="row flex-lg-row-reverse align-items-center g-5 py-5">
       <div class="col-10 col-sm-8 col-lg-6">
-        <img src="../static/img/84sveZZRXDU.jpg" class="d-block mx-lg-auto img-fluid" alt="Bootstrap Themes" width="700" height="500">
+        <img src="../static/img/intro.png" class="d-block mx-lg-auto img-fluid" alt="Bootstrap Themes" width="500" height="500">
       </div>
       <div class="col-lg-6">
         <h1 class="display-5 fw-bold lh-1 mb-3">Mega ToDo</h1>
         <p class="lead">Инструмент для управления и хранения задач. Способен улучшить продуктивность и помочь в организации работы, планирования дня или недели.</p>
-        <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+        {% if current_user.is_authenticated %}
+        <a class="navbar-brand" href="/tasks">Продолжить как {{ current_user.name }}</a>
+          <a type="button" class="btn btn-primary btn-lg px-4 me-md-2" href="/logout">Выйти</a>
+        {% else %}
+          <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+
           <a type="button" class="btn btn-primary btn-lg px-4 me-md-2" href="/register">Зарегистрироваться</a>
           <a type="button" class="btn btn-outline-secondary btn-lg px-4" href="/login" style="margin-left: 8px">Войти</a>
         </div>
+          {% endif %}
       </div>
     </div>
   </div>

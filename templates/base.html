@@ -15,7 +15,19 @@
 <body>
 <header>
     <nav class="navbar navbar-light" style="background-color: #e3f2fd;" >
+
+        {% if current_user.is_authenticated %}
+        <a class="navbar-brand" href="/tasks">Mega ToDo</a>
+        <div>
+    <a class="navbar-brand" href="/settings">{{ current_user.name }}</a>
+          <a type="button" class="btn btn-primary btn-lg px-4 me-md-2" href="/logout">Выйти</a></div>
+{% else %}
         <a class="navbar-brand" href="/">Mega ToDo</a>
+    <p>
+        <a class="btn btn-primary " href="/register">Зарегистрироваться</a>
+        <a class="btn btn-success" href="/login">Войти</a>
+    </p>
+{% endif %}
     </nav>
 </header>
 <main role="main" class="container">
