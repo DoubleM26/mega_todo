@@ -1,14 +1,18 @@
 from flask import Flask, make_response, jsonify, render_template
+from flask_restful import Api
 from werkzeug.utils import redirect
 
 from forms.login import LoginForm
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from data import db_session
+from data import db_session, user_resources
 from data.User import User
 from forms.registerform import RegisterForm
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'aboba'
+api = Api(app)
+api.add_resource(user_resources.UserListResource, "/api/users")
+api.add_resource(user_resources.UserResource, "/api/users/<int:user_id>")
 login_manager = LoginManager()
 login_manager.init_app(app)
 
