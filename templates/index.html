@@ -1,7 +1,30 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div style="display: flex; margin: 12px">
-    <h2 style="margin-left: auto; margin-right: auto;">Привет мир!</h2>
+<div style="margin-top: 12px">
+    <h2>Задачи</h2>
+    <form action="" method="post" id="task_create">
+        {{ form.hidden_tag() }}
+        {{ form.task_title(class="task_create", placeholder="Добавить задачу") }}<br>
+            {% for error in form.task_title.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        <div style="color: red;">{{ message }}</div>
+    </form>
+    <script>
+        const form = document.getElementById("task_create")
+        form.addEventListener("keydown", (event) => {
+        if (event.code === "Enter") {
+            form.submit()
+        }
+        })
+    </script>
+    {% for task in tasks_data %}
+        <div >
+            {{ task.title }}
+        </div>
+    {% endfor %}
 </div>
 {% endblock %}

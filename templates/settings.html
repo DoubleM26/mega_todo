@@ -2,11 +2,26 @@
 
 {% block content %}
 <div class="card" style="margin-top: 12px">
-    <div class="card-body">
+    <form action="" method="post" class="card-body" id="name_change">
         <h5 class="card-title">Изменить имя пользователя</h5>
-        <input id="name" class="form-control" placeholder="Новое имя" >
-        <a href="/" class="btn btn-primary" style="margin-top: 6px">Сохранить</a>
-    </div>
+        {{ form.hidden_tag() }}
+        {{ form.name(class="form-control", placeholder="Новое имя") }}<br>
+            {% for error in form.name.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+        <div style="color: red;">{{ message }}</div>
+    </form>
+    <script>
+        const form = document.getElementById("name_change")
+        form.addEventListener("keydown", (event) => {
+        if (event.code === "Enter") {
+            form.submit()
+        }
+        })
+    </script>
 </div>
 <div class="card" style="margin-top: 12px">
     <div class="card-body">

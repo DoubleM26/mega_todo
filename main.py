@@ -3,9 +3,12 @@ from flask_restful import Api
 from werkzeug.utils import redirect
 
 from forms.login import LoginForm
+from forms.name_change import NameChangeForm
+from forms.add_task import AddTask
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from data import db_session, user_resources
 from data.User import User
+from data.Task import Task
 from forms.registerform import RegisterForm
 
 app = Flask(__name__)
@@ -23,10 +26,33 @@ def load_user(user_id):
     return db_sess.query(User).get(user_id)
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def main():
     if current_user.is_authenticated:
-        return render_template("index.html", title="Mega ToDo")
+        form = AddTask()
+
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.id == current_user.id).first()
+        tasks_data = []
+        for task_id in user.tasks.split():
+            task = db_sess.query(Task).filter(Task.id == int(task_id)).first()
+            tasks_data.append(task)
+        tasks_data.reverse()
+        if form.validate_on_submit():
+            task = db_sess.query(Task).filter(Task.title == form.task_title.data).first()
+            if not task:
+                task = Task(title=form.task_title.data)
+                db_sess.add(task)
+                db_sess.commit()
+                task = db_sess.query(Task).filter(Task.title == form.task_title.data).first()
+
+                user.tasks += " " + str(task.id)
+                db_sess.commit()
+                return redirect("/")
+            return render_template('index.html', message="Такая задача уже существует", form=form, tasks_data=tasks_data)
+            # user = db_sess.query(User).filter(User.id == current_user.id).first()
+
+        return render_template("index.html", title="Mega ToDo", form=form, tasks_data=tasks_data)
     return render_template("intro.html")
 
 
@@ -69,9 +95,18 @@ def login():
     return render_template("login.html", form=form, title="Авторизация")
 
 
-@app.route('/settings')
+@app.route('/settings', methods=['GET', 'POST'])
 def settings():
-    return render_template("settings.html", title="Настройки")
+    form = NameChangeForm()
+    print(form.validate_on_submit())
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.id == current_user.id).first()
+        print(form.name.data)
+        user.name = form.name.data
+        db_sess.commit()
+        return redirect('/settings')
+    return render_template("settings.html", title="Настройки", form=form)
 
 
 @app.route('/logout')
