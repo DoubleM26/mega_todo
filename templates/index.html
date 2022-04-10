@@ -1,30 +1,36 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div style="margin-top: 12px">
-    <h2>Задачи</h2>
-    <form action="" method="post" id="task_create">
-        {{ form.hidden_tag() }}
-        {{ form.task_title(class="task_create", placeholder="Добавить задачу") }}<br>
-            {% for error in form.task_title.errors %}
-                <div class="alert alert-danger" role="alert">
-                    {{ error }}
-                </div>
-            {% endfor %}
-        <div style="color: red;">{{ message }}</div>
-    </form>
-    <script>
-        const form = document.getElementById("task_create")
-        form.addEventListener("keydown", (event) => {
-        if (event.code === "Enter") {
-            form.submit()
-        }
-        })
-    </script>
-    {% for task in tasks_data %}
-        <div >
-            {{ task.title }}
+<form action="" method="post" id="task_create" style="margin-top: 4px">
+    {{ form.hidden_tag() }}
+    {{ form.task_title(class="task_create", placeholder="Добавить задачу", id="task_create") }}<br>
+        {% for error in form.task_title.errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+        {% endfor %}
+    <div style="color: red;">{{ message }}</div>
+</form>
+<script>
+    const form = document.getElementById("task_create")
+    form.addEventListener("keydown", (event) => {
+    if (event.code === "Enter") {
+        form.submit()
+    }
+    })
+</script>
+{% for task in tasks_data %}
+    <div class="task">
+        <div class="form-check">
+          {% if task.complete %}
+              <input class="form-check-input" type="checkbox" value="" id="{{task.id}}" checked style="cursor: pointer">
+          {% else %}
+            <input class="form-check-input" type="checkbox" value="" id="{{task.id}}" style="cursor: pointer">
+          {% endif %}
+          <label class="form-check-label" for="{{task.id}}" style="cursor: pointer">
+            {{task.title}}
+          </label>
         </div>
-    {% endfor %}
-</div>
+    </div>
+{% endfor %}
 {% endblock %}

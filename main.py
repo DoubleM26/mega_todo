@@ -1,4 +1,4 @@
-from flask import Flask, make_response, jsonify, render_template
+from flask import Flask, make_response, jsonify, render_template, request
 from flask_restful import Api
 from werkzeug.utils import redirect
 
@@ -26,6 +26,7 @@ def load_user(user_id):
     return db_sess.query(User).get(user_id)
 
 
+@app.route('/complete_tasks', methods=['GET', 'POST'])
 @app.route('/', methods=['GET', 'POST'])
 def main():
     if current_user.is_authenticated:
@@ -36,7 +37,10 @@ def main():
         tasks_data = []
         for task_id in user.tasks.split():
             task = db_sess.query(Task).filter(Task.id == int(task_id)).first()
-            tasks_data.append(task)
+            if request.url.split("/")[-1] and task.complete:
+                tasks_data.append(task)
+            elif not request.url.split("/")[-1] and not task.complete:
+                tasks_data.append(task)
         tasks_data.reverse()
         if form.validate_on_submit():
             task = db_sess.query(Task).filter(Task.title == form.task_title.data).first()
@@ -51,8 +55,16 @@ def main():
                 return redirect("/")
             return render_template('index.html', message="Такая задача уже существует", form=form, tasks_data=tasks_data)
             # user = db_sess.query(User).filter(User.id == current_user.id).first()
-
-        return render_template("index.html", title="Mega ToDo", form=form, tasks_data=tasks_data)
+        if not request.url.split("/")[-1]:
+            classes = ["nav-link active", "nav-link", "nav-link"]
+        else:
+            classes = ["nav-link", "nav-link", "nav-link active"]
+        return render_template(
+            "index.html",
+            title="Mega ToDo",
+            form=form,
+            tasks_data=tasks_data,
+            classes=classes)
     return render_template("intro.html")
 
 

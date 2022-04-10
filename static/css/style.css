@@ -15,8 +15,31 @@
     border-radius: 10px;
     border: 1px solid #82c1ef;
     outline: none;
+    margin-bottom: 4px;
 }
 
-input:focus {
+input:focus#task_create {
   border: 2px solid #82c1ef !important;
 }
+
+.task {
+    padding: 8px;
+    background-color: #f1f1f1;
+    border-radius: 12px;
+    margin-top: 4px;
+    user-select: none;
+}
+
+.search {
+    height: 36px;
+	padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    outline: none;
+    border: none;
+    border-bottom: 2px solid #82c1ef;
+    transition: none !important;
+}
+
+
