@@ -6,16 +6,16 @@ from forms.login import LoginForm
 from forms.name_change import NameChangeForm
 from forms.add_task import AddTask
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from data import db_session, user_resources
+from data import db_session, api
 from data.User import User
 from data.Task import Task
 from forms.registerform import RegisterForm
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'aboba'
-api = Api(app)
-api.add_resource(user_resources.UserListResource, "/api/users")
-api.add_resource(user_resources.UserResource, "/api/users/<int:user_id>")
+# api = Api(app)
+# api.add_resource(user_resources.UserListResource, "/api/users")
+# api.add_resource(user_resources.UserResource, "/api/users/<int:user_id>")
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -94,6 +94,11 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # if not request.url.split("/")[-1]:
+    #     classes = ["nav-link active", "nav-link", "nav-link"]
+    # else:
+    #     classes = ["nav-link", "nav-link", "nav-link active"]
+
     form = LoginForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
