@@ -32,5 +32,13 @@
           </label>
         </div>
     </div>
+    <script>
+        const task = document.getElementById('{{task.id}}')
+        task.addEventListener("click", (event) => {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/change_status/' + '{{task.id}}', false);
+            xhr.send();
+        })
+    </script>
 {% endfor %}
 {% endblock %}

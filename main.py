@@ -56,6 +56,7 @@ def main():
             return render_template('index.html', message="Такая задача уже существует", form=form, tasks_data=tasks_data)
             # user = db_sess.query(User).filter(User.id == current_user.id).first()
         if not request.url.split("/")[-1]:
+            print(request.url.split("/")[-1])
             classes = ["nav-link active", "nav-link", "nav-link"]
         else:
             classes = ["nav-link", "nav-link", "nav-link active"]

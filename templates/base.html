@@ -33,25 +33,25 @@
 </header>
 
 <main role="main" class="container">
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 12px">
-        <ul class="nav nav-tabs">
-            {% if current_user.is_authenticated %}
-                <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="/">To do</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/calendar">Календарь</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/complete_tasks">Выполненные задачи</a>
-                </li>
-          {% endif %}
-        </ul>
-        <form class="d-flex">
-            <input class="search" type="search" placeholder="Поиск" >
+    {% if current_user.is_authenticated and classes %}
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 12px">
+            <ul class="nav nav-tabs">
 
-        </form>
-    </div>
+                <li class="nav-item">
+                    <a class="{{classes[0]}}" aria-current="page" href="/">To do</a>
+                </li>
+                <li class="nav-item">
+                    <a class="{{classes[1]}}" href="/calendar">Календарь</a>
+                </li>
+                <li class="nav-item">
+                    <a class="{{classes[2]}}" href="/complete_tasks">Выполненные задачи</a>
+                </li>
+            </ul>
+            <form class="d-flex">
+                <input class="search" type="search" placeholder="Поиск" >
+            </form>
+        </div>
+    {% endif %}
     {% block content %}{% endblock %}
 </main>
 </body>
