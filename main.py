@@ -1,8 +1,11 @@
+from datetime import timedelta
+
 from flask import Flask, make_response, jsonify, render_template, request
-from flask_jwt_simple import JWTManager
+from flask_jwt_simple import JWTManager, jwt_required, get_jwt_identity
 from flask_restful import Api
 from werkzeug.utils import redirect
 
+from data.api import check_keys, create_jwt_for_user
 from forms.login import LoginForm
 from forms.name_change import NameChangeForm
 from forms.add_task import AddTask
@@ -15,7 +18,7 @@ from forms.registerform import RegisterForm
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'aboba'
 app.config["JWT_SECRET_KEY"] = "super-secret"  # секретный ключ для токенов
-# app.config["JWT_EXPIRES"] = timedelta(hours=24)  # сколько действителен jwt токен
+app.config["JWT_EXPIRES"] = timedelta(hours=24)  # сколько действителен jwt токен
 app.config["JWT_IDENTITY_CLAIM"] = 'user'  # заголовок, где хранится информация о пользователе
 app.config["JWT_HEADER_NAME"] = 'authorization'  # заголовок, куда передается токен при действиях
 app.jwt = JWTManager(app)
@@ -141,14 +144,22 @@ def logout():
     return redirect("/")
 
 
-@app.route('/api')
-def api_help():
-    return render_template("api_help.html")
-
-
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
+
+
+@app.jwt.expired_token_loader
+def my_expired_token_callback():
+    err_json = {"message": "expired token"}
+    return jsonify(err_json), 401
+
+
+@app.jwt.invalid_token_loader
+@app.jwt.unauthorized_loader
+def my_inv_unauth_token_callback(why):
+    err_json = {"message": why}
+    return jsonify(err_json), 401
 
 
 if __name__ == '__main__':
