@@ -137,11 +137,20 @@ def settings():
     return render_template("settings.html", title="Настройки", form=form)
 
 
+@app.route('/test')
+def test():
+    form = TaskChangeForm()
+    return render_template("test.html", form=forn)
+
+
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect("/")
+
+
+
 
 
 @app.errorhandler(404)
