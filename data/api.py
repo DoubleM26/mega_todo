@@ -94,63 +94,89 @@ def get_user_tasks():
                            "deadline": task.deadline, "files": task.files})
     tasks_data.reverse()
     return jsonify({"tasks": tasks_data})
-    # if not request.json:
-    #     return jsonify({"error": "Empty request"})
-    # elif not check_keys(request.json, ())
-
-# это для примера
-# @app.route("/api/posts", methods=["POST"])
-# @jwt_required
-# def add_post():
-#     if not request.json:
-#         return make_resp(jsonify({"message":"Empty request"}), 400)
-#     elif not check_keys(request.json, ("category", "type", "titile")):
-#         return make_resp(jsonify({"message":"bad request"}), 400)
-#     post = Post(**request.json)
-#     post.author = User(**get_jwt_identify())
-#     post=app.post_repo.request_create(post)
-#     return make_resp(jsonify(post), 200)
 
 
-# @blueprint.route('/api/users/<int:user_id>/tasks', methods=['GET'])
-# def get_user_tasks(user_id):
-#     db_sess = db_session.create_session()
-#     tasks = db_sess.query(Task).get(user_id)
-#     if not tasks:
-#         return jsonify({'error': 'Not found'})
-#     return jsonify(
-#         {
-#             'tasks': tasks.to_dict(only=(
-#                 'id', 'title', 'complete', 'description', 'creation_date', 'deadline', 'files'))
-#         }
-#     )
+@blueprint.route('/api/tasks/new', methods=["POST"])
+@jwt_required
+def create_new_task():
+    if not request.json:
+        return jsonify({"error": "Empty request"})
+    elif not 'title' in request.json.keys():
+        return jsonify({"error": "Bad request"})
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.email == get_jwt_identity()["email"]).first()
+    task = db_sess.query(Task).filter(Task.title == request.json['title']).first()
+    if task:
+        return jsonify({"error": "Task already exists"})
+    task = Task()
+    task.title = request.json['title']
+    # добавляем другие параметры, если они есть
+    if "complete" in request.json.keys():
+        task.complete = request.json['complete']
+    if "description" in request.json.keys():
+        task.description = request.json['description']
+    if "deadline" in request.json.keys():
+        task.deadline = request.json['deadline']
+    if "files" in request.json.keys():
+        task.files = request.json['files']
+
+    db_sess.add(task)
+    db_sess.commit()
+    task = db_sess.query(Task).filter(Task.title == request.json['title']).first()
+    user.tasks += " " + str(task.id)
+    db_sess.commit()
+    return jsonify({"message": "success"})
 
 
-# # todo нужно сначала зарегистрироваться, чтобы загружать новые задачи
-# @blueprint.route('/api/users/<int:user_id>/tasks', methods=['POST'])
-# def create_tasks(user_id):
-#     if not request.json:
-#         return jsonify({'error': 'Empty request'})
-#     elif not all(key in request.json for key in
-#                  ['title', 'content', 'user_id', 'is_private']):
-#         return jsonify({'error': 'Bad request'})
-#     db_sess = db_session.create_session()
-#     task = Task(
-#         id=-1
-#     )  # todo
-#     db_sess.add(task)
-#     db_sess.commit()
-#     return jsonify({'success': 'OK'})
-#
-#
-# @blueprint.route('/api/users/<int:user_id>/tasks/<int:news_id>', methods=['DELETE'])
-# def delete_tasks(news_id):
-#     db_sess = db_session.create_session()
-#     task = db_sess.query(Task).get(news_id)
-#     if not task:
-#         return jsonify({'error': 'Not found'})
-#     db_sess.delete(task)
-#     # todo удаляется так-же и у пользователя
-#     db_sess.commit()
-#     return jsonify({'success': 'OK'})
-# # todo - изменение задачи
+@blueprint.route('/api/tasks/delete', methods=["DELETE"])
+@jwt_required
+def delete_task():
+    if not request.json:
+        return jsonify({"error": "Empty request"})
+    elif not 'title' in request.json.keys():
+        return jsonify({"error": "Bad request"})
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.email == get_jwt_identity()["email"]).first()
+    task = db_sess.query(Task).filter(Task.title == request.json['title']).first()
+    if not task:
+        return jsonify({"error": "Task does not exists"})
+    db_sess.delete(task)  # todo
+    db_sess.commit()
+    print(user.tasks)
+    print(type(user.tasks))
+    user.tasks = user.tasks.replace(str(task.id), "", 1)
+    # data = user.tasks.split()
+    # data.remove(str(task.id))
+    # user.tasks = data
+    db_sess.commit()
+    return jsonify({"message": "success"})
+
+
+@blueprint.route('/api/tasks/change', methods=["POST"])
+@jwt_required
+def change_task():
+    if not request.json:
+        return jsonify({"error": "Empty request"})
+    elif not 'title' in request.json.keys():
+        return jsonify({"error": "Bad request"})
+    db_sess = db_session.create_session()
+    task = db_sess.query(Task).filter(Task.title == request.json['title']).first()
+    if not task:
+        return jsonify({"error": "Task not found"})
+    # добавляем параметры, если они есть
+    if "complete" in request.json.keys():
+        task.complete = request.json['complete']
+    if "description" in request.json.keys():
+        task.description = request.json['description']
+    if "deadline" in request.json.keys():
+        task.deadline = request.json['deadline']
+    if "files" in request.json.keys():
+        task.files = request.json['files']
+    db_sess.commit()
+    return jsonify({"message": "success"})
+
+
+@blueprint.route('/api/files/add', methods=["POST"])
+@jwt_required
+def change_task():
+    pass #todo загрузка файлов
