@@ -32,6 +32,25 @@
         })
     })
 </script>
+<div>
+    <div style="float:left; width: 30%">
+        {% for task in tasks_data %}
+        <div class="task">
+            <div class="form-check">
+                {% if task.complete %}
+                <input class="form-check-input" type="checkbox" value="" id="{{task.id}}" checked
+                       style="cursor: pointer">
+                {% else %}
+                <input class="form-check-input" type="checkbox" value="" id="{{task.id}}" style="cursor: pointer">
+                {% endif %}
+                <label class="form-check-label" for="{{task.id}}" style="cursor: pointer">
+                    {{task.title}}
+                </label>
+            </div>
+        </div>
+        <script>
+        const task = document.getElementById('{{task.id}}')
+        task.addEventListener("click", (event) => {
 {% for task in tasks_data %}
     <div class="task">
         <div class="form-check">
@@ -62,6 +81,60 @@
             xhr.send();
             window.location.reload();
         })
+
+
+
+
+        </script>
+        {% endfor %}
+    </div>
+
+    <div style="float:right; width: 70%; ">
+        {% if task_name == None %}
+        <div style="text-align: center;">
+            <img style=" width:50%; position: relative" src="../static/img/fortnite_food.jpg">
+            <h3> Задача не выбрана</h3>
+        </div>
+        {% else %}
+        <h3>{{task_name}}</h3>
+        <form action="{{ url_for('first_handler') }}" method="post" enctype="multipart/form-data">
+            {{ change_form.hidden_tag() }}
+            <p>{{ change_form.complete() }} {{ change_form.complete.label }}</p>
+            <p>{{ change_form.submit(type="submit", class="btn btn-primary") }}</p>
+            <div>{{ message }}</div>
+            <p>
+                {{change_form.date.label}}<br>
+                {{ change_form.date(class="form-control") }}<br>
+                {% for error in change_form.date.errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endfor %}
+            </p>
+            <p>
+                {{ change_form.description.label }}<br>
+                {{ change_form.description(class="form-control") }}<br>
+                {% for error in change_form.description.errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endfor %}
+            </p>
+            <p>
+                {{change_form.file.label}}<br>
+                {{ change_form.file(class="form-control") }}<br>
+                {% for error in change_form.file.errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endfor %}
+            </p>
+
+
+        </form>
+        {%endif%}
+    </div>
+</div>
 
 
 
