@@ -173,6 +173,20 @@ def change_task(task_id):
     return jsonify({"message": "success"})
 
 
+@blueprint.route('/api/tasks/by_date/<date>', methods=["GET"])
+@jwt_required
+def get_tasks_by_date(date):
+    print(date)
+    db_sess = db_session.create_session()
+    tasks_data = []
+    user = db_sess.query(User).filter(User.email == get_jwt_identity()["email"]).first()
+    for task_id in user.tasks.split():
+        task = db_sess.query(Task).filter(Task.id == int(task_id)).first()
+        tasks_data.append(task.to_dict())
+    tasks_data.reverse()
+    return jsonify(tasks_data)
+
+
 @blueprint.route('/api/files/add', methods=["POST"])
 @jwt_required
 def add_file():

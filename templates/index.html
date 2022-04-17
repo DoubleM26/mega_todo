@@ -21,17 +21,15 @@
 
     const search = document.getElementById("search_task")
     search.value = '{{search_data}}'
-    search.addEventListener("keydown", (event) => {
-        console.log("aboba")
-        if (event.code === "Enter") {
+    search.addEventListener('click', () => {
+        search.addEventListener("search", (event) => {
             const href = window.location.href.split("/")
-            if ({{lower(complete)}}) {
-                window.location.replace(href.slice(0, 4).join("/") + "/" + search.value)
-            } else {
-                window.location.replace(href.slice(0, 3).join("/") + "/" + search.value)
-            }
-
-        }
+                if ({{lower(complete)}}) {
+                    window.location.replace(href.slice(0, 4).join("/") + "/" + search.value)
+                } else {
+                    window.location.replace(href.slice(0, 3).join("/") + "/" + search.value)
+                }
+        })
     })
 </script>
 {% for task in tasks_data %}

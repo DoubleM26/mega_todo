@@ -1,12 +1,9 @@
-import os
-from datetime import timedelta
+from datetime import timedelta, date
 
-from flask import Flask, make_response, jsonify, render_template, request, url_for, flash
-from flask_jwt_simple import JWTManager, jwt_required, get_jwt_identity
-from flask_restful import Api
-from werkzeug.utils import redirect, secure_filename
+from flask import Flask, make_response, jsonify, render_template
+from flask_jwt_simple import JWTManager
 
-from data.api import check_keys, create_jwt_for_user
+from werkzeug.utils import redirect
 from forms.login import LoginForm
 from forms.name_change import NameChangeForm
 from forms.add_task import AddTask
@@ -150,7 +147,7 @@ def settings():
 @app.route('/calendar')
 def calendar():
     classes = ["nav-link", "nav-link active", "nav-link"]
-    return render_template("calendar.html", title="Календарь", classes=classes)
+    return render_template("calendar.html", title="Календарь", classes=classes, date=date)
 
 
 @app.route('/test')

@@ -46,12 +46,15 @@
                     <a class="{{classes[2]}}" href="/complete_tasks">Выполненные задачи</a>
                 </li>
             </ul>
+            {% if title != "Календарь" %}
             <div class="d-flex">
                 <input class="search" id="search_task" type="search" placeholder="Поиск" >
             </div>
+            {% endif %}
         </div>
     {% endif %}
     {% block content %}{% endblock %}
 </main>
+<div style="height: 10px"></div>
 </body>
 </html>
