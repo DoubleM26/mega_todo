@@ -1,5 +1,5 @@
 import os
-from datetime import timedelta, date
+from datetime import timedelta
 
 from flask import Flask, make_response, jsonify, render_template, request, url_for, flash
 from flask_jwt_simple import JWTManager, jwt_required, get_jwt_identity
@@ -7,10 +7,6 @@ from flask_restful import Api
 from werkzeug.utils import redirect, secure_filename
 
 from data.api import check_keys, create_jwt_for_user
-from flask import Flask, make_response, jsonify, render_template
-from flask_jwt_simple import JWTManager
-
-from werkzeug.utils import redirect
 from forms.login import LoginForm
 from forms.name_change import NameChangeForm
 from forms.add_task import AddTask
@@ -150,8 +146,10 @@ def register():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
+
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.email == form.email.data).first()
+
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
 
