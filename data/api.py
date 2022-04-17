@@ -152,31 +152,28 @@ def delete_task():
     return jsonify({"message": "success"})
 
 
-@blueprint.route('/api/tasks/change', methods=["POST"])
+@blueprint.route('/api/tasks/change/<int:task_id>', methods=["POST"])
 @jwt_required
-def change_task():
-    if not request.json:
-        return jsonify({"error": "Empty request"})
-    elif not 'title' in request.json.keys():
-        return jsonify({"error": "Bad request"})
+def change_task(task_id):
     db_sess = db_session.create_session()
-    task = db_sess.query(Task).filter(Task.title == request.json['title']).first()
+    task = db_sess.query(Task).filter(Task.id == task_id).first()
     if not task:
         return jsonify({"error": "Task not found"})
     # добавляем параметры, если они есть
-    if "complete" in request.json.keys():
-        task.complete = request.json['complete']
-    if "description" in request.json.keys():
-        task.description = request.json['description']
-    if "deadline" in request.json.keys():
-        task.deadline = request.json['deadline']
-    if "files" in request.json.keys():
-        task.files = request.json['files']
+    # if "complete" in request.json.keys():
+    #     task.complete = request.json['complete']
+    # if "description" in request.json.keys():
+    #     task.description = request.json['description']
+    # if "deadline" in request.json.keys():
+    #     task.deadline = request.json['deadline']
+    # if "files" in request.json.keys():
+    #     task.files = request.json['files']
+    task.complete = not task.complete
     db_sess.commit()
     return jsonify({"message": "success"})
 
 
-@blueprint.route('/api/files/add', methods=["POST"])
-@jwt_required
-def change_task():
-    pass #todo загрузка файлов
+# @blueprint.route('/api/files/add', methods=["POST"])
+# @jwt_required
+# def change_task():
+#     pass #todo загрузка файлов

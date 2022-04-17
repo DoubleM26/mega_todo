@@ -5,7 +5,6 @@ from flask_jwt_simple import JWTManager, jwt_required, get_jwt_identity
 from flask_restful import Api
 from werkzeug.utils import redirect
 
-from data.api import check_keys, create_jwt_for_user
 from forms.login import LoginForm
 from forms.name_change import NameChangeForm
 from forms.add_task import AddTask
@@ -13,6 +12,7 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from data import db_session, api
 from data.User import User
 from data.Task import Task
+from data.api import create_jwt_for_user
 from forms.registerform import RegisterForm
 
 app = Flask(__name__)
@@ -35,9 +35,11 @@ def load_user(user_id):
     return db_sess.query(User).get(user_id)
 
 
-@app.route('/complete_tasks', methods=['GET', 'POST'])
-@app.route('/', methods=['GET', 'POST'])
-def main():
+@app.route('/complete_tasks/<search_data>', methods=['GET', 'POST'], defaults={'complete': True})
+@app.route('/<search_data>', methods=['GET', 'POST'], defaults={'complete': False})
+@app.route('/complete_tasks', methods=['GET', 'POST'], defaults={'search_data': "", 'complete': True})
+@app.route('/', methods=['GET', 'POST'], defaults={'search_data': "", 'complete': False})
+def main(search_data, complete):
     if current_user.is_authenticated:
         form = AddTask()
 
@@ -46,27 +48,23 @@ def main():
         tasks_data = []
         for task_id in user.tasks.split():
             task = db_sess.query(Task).filter(Task.id == int(task_id)).first()
-            if request.url.split("/")[-1] and task.complete:
-                tasks_data.append(task)
-            elif not request.url.split("/")[-1] and not task.complete:
-                tasks_data.append(task)
+            if search_data.lower() in task.title.lower() or search_data.lower() in task.description.lower():
+                if complete and task.complete:
+                    tasks_data.append(task)
+                elif not complete and not task.complete:
+                    tasks_data.append(task)
         tasks_data.reverse()
         if form.validate_on_submit():
-            task = db_sess.query(Task).filter(Task.title == form.task_title.data).first()
-            if not task:
-                task = Task(title=form.task_title.data)
-                db_sess.add(task)
-                db_sess.commit()
-                task = db_sess.query(Task).filter(Task.title == form.task_title.data).first()
+            task = Task(title=form.task_title.data)
+            db_sess.add(task)
+            db_sess.commit()
+            task = db_sess.query(Task).filter(Task.title == form.task_title.data)[-1]
 
-                user.tasks += " " + str(task.id)
-                db_sess.commit()
-                return redirect("/")
-            return render_template('index.html', message="Такая задача уже существует", form=form,
-                                   tasks_data=tasks_data)
+            user.tasks += " " + str(task.id)
+            db_sess.commit()
+            return redirect("/")
             # user = db_sess.query(User).filter(User.id == current_user.id).first()
-        if not request.url.split("/")[-1]:
-            print(request.url.split("/")[-1])
+        if not complete:
             classes = ["nav-link active", "nav-link", "nav-link"]
         else:
             classes = ["nav-link", "nav-link", "nav-link active"]
@@ -74,7 +72,10 @@ def main():
             "index.html",
             title="Mega ToDo",
             form=form,
+            search_data=search_data,
             tasks_data=tasks_data,
+            complete=str(complete),
+            lower=lambda x: x.lower(),
             classes=classes)
     return render_template("intro.html")
 
@@ -105,18 +106,20 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # if not request.url.split("/")[-1]:
-    #     classes = ["nav-link active", "nav-link", "nav-link"]
-    # else:
-    #     classes = ["nav-link", "nav-link", "nav-link active"]
-
     form = LoginForm()
     if form.validate_on_submit():
+
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.email == form.email.data).first()
+
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
-            return redirect("/")
+
+            res = redirect("/")
+            token = create_jwt_for_user(user)
+            res.set_cookie("jwt", token.json["token"], max_age=60 * 60 * 24 * 365 * 2)
+            return res
+
         return render_template('login.html',
                                message="Неправильный логин или пароль",
                                form=form)
@@ -126,7 +129,7 @@ def login():
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
     form = NameChangeForm()
-    print(form.validate_on_submit())
+
     if form.validate_on_submit():
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.id == current_user.id).first()
@@ -135,6 +138,12 @@ def settings():
         db_sess.commit()
         return redirect('/settings')
     return render_template("settings.html", title="Настройки", form=form)
+
+
+@app.route('/calendar')
+def calendar():
+    classes = ["nav-link", "nav-link active", "nav-link"]
+    return render_template("calendar.html", title="Календарь", classes=classes)
 
 
 @app.route('/test')
@@ -148,9 +157,6 @@ def test():
 def logout():
     logout_user()
     return redirect("/")
-
-
-
 
 
 @app.errorhandler(404)

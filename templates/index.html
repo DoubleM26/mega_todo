@@ -14,9 +14,24 @@
 <script>
     const form = document.getElementById("task_create")
     form.addEventListener("keydown", (event) => {
-    if (event.code === "Enter") {
-        form.submit()
-    }
+        if (event.code === "Enter") {
+            form.submit()
+        }
+    })
+
+    const search = document.getElementById("search_task")
+    search.value = '{{search_data}}'
+    search.addEventListener("keydown", (event) => {
+        console.log("aboba")
+        if (event.code === "Enter") {
+            const href = window.location.href.split("/")
+            if ({{lower(complete)}}) {
+                window.location.replace(href.slice(0, 4).join("/") + "/" + search.value)
+            } else {
+                window.location.replace(href.slice(0, 3).join("/") + "/" + search.value)
+            }
+
+        }
     })
 </script>
 {% for task in tasks_data %}
@@ -33,12 +48,27 @@
         </div>
     </div>
     <script>
-        const task = document.getElementById('{{task.id}}')
-        task.addEventListener("click", (event) => {
+        function getCookie(name) {
+            let matches = document.cookie.match(new RegExp(
+                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+            ));
+            return matches ? decodeURIComponent(matches[1]) : undefined;
+        }
+
+        var jwtoken = getCookie("jwt")
+
+        document.getElementById('{{task.id}}').addEventListener("click", (event) => {
             var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/change_status/' + '{{task.id}}', false);
+            xhr.open('POST', '/api/tasks/change/' + '{{task.id}}', false);
+            xhr.setRequestHeader('Authorization', 'Bearer ' + jwtoken);
             xhr.send();
+            window.location.reload();
         })
     </script>
 {% endfor %}
+
+{% if not tasks_data %}
+<p style="margin-top: 12px">Кажется, тут пусто</p>
+{% endif %}
+
 {% endblock %}

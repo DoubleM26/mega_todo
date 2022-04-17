@@ -36,7 +36,6 @@
     {% if current_user.is_authenticated and classes %}
         <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 12px">
             <ul class="nav nav-tabs">
-
                 <li class="nav-item">
                     <a class="{{classes[0]}}" aria-current="page" href="/">To do</a>
                 </li>
@@ -47,9 +46,9 @@
                     <a class="{{classes[2]}}" href="/complete_tasks">Выполненные задачи</a>
                 </li>
             </ul>
-            <form class="d-flex">
-                <input class="search" type="search" placeholder="Поиск" >
-            </form>
+            <div class="d-flex">
+                <input class="search" id="search_task" type="search" placeholder="Поиск" >
+            </div>
         </div>
     {% endif %}
     {% block content %}{% endblock %}
