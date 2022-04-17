@@ -1,10 +1,12 @@
+import os
 from datetime import timedelta
 
-from flask import Flask, make_response, jsonify, render_template, request
+from flask import Flask, make_response, jsonify, render_template, request, url_for, flash
 from flask_jwt_simple import JWTManager, jwt_required, get_jwt_identity
 from flask_restful import Api
-from werkzeug.utils import redirect
+from werkzeug.utils import redirect, secure_filename
 
+from data.api import check_keys, create_jwt_for_user
 from forms.login import LoginForm
 from forms.name_change import NameChangeForm
 from forms.add_task import AddTask
@@ -14,6 +16,10 @@ from data.User import User
 from data.Task import Task
 from data.api import create_jwt_for_user
 from forms.registerform import RegisterForm
+from forms.taskchangeform import TaskChangeForm
+
+UPLOAD_FOLDER = './saved_files'
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'aboba'
@@ -21,6 +27,7 @@ app.config["JWT_SECRET_KEY"] = "super-secret"  # секретный ключ д�
 app.config["JWT_EXPIRES"] = timedelta(hours=24)  # сколько действителен jwt токен
 app.config["JWT_IDENTITY_CLAIM"] = 'user'  # заголовок, где хранится информация о пользователе
 app.config["JWT_HEADER_NAME"] = 'authorization'  # заголовок, куда передается токен при действиях
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.jwt = JWTManager(app)
 # api = Api(app)
 # api.add_resource(user_resources.UserListResource, "/api/users")
@@ -157,6 +164,9 @@ def test():
 def logout():
     logout_user()
     return redirect("/")
+
+
+
 
 
 @app.errorhandler(404)

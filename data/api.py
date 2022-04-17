@@ -173,7 +173,7 @@ def change_task(task_id):
     return jsonify({"message": "success"})
 
 
-# @blueprint.route('/api/files/add', methods=["POST"])
-# @jwt_required
-# def change_task():
-#     pass #todo загрузка файлов
+@blueprint.route('/api/files/add', methods=["POST"])
+@jwt_required
+def add_file():
+    pass  # todo загрузка файлов
