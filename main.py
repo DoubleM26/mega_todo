@@ -1,9 +1,10 @@
+import os
 from datetime import timedelta
 
-from flask import Flask, make_response, jsonify, render_template, request
+from flask import Flask, make_response, jsonify, render_template, request, url_for, flash
 from flask_jwt_simple import JWTManager, jwt_required, get_jwt_identity
 from flask_restful import Api
-from werkzeug.utils import redirect
+from werkzeug.utils import redirect, secure_filename
 
 from data.api import check_keys, create_jwt_for_user
 from forms.login import LoginForm
@@ -14,6 +15,10 @@ from data import db_session, api
 from data.User import User
 from data.Task import Task
 from forms.registerform import RegisterForm
+from forms.taskchangeform import TaskChangeForm
+
+UPLOAD_FOLDER = './saved_files'
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'aboba'
@@ -21,10 +26,8 @@ app.config["JWT_SECRET_KEY"] = "super-secret"  # секретный ключ д�
 app.config["JWT_EXPIRES"] = timedelta(hours=24)  # сколько действителен jwt токен
 app.config["JWT_IDENTITY_CLAIM"] = 'user'  # заголовок, где хранится информация о пользователе
 app.config["JWT_HEADER_NAME"] = 'authorization'  # заголовок, куда передается токен при действиях
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.jwt = JWTManager(app)
-# api = Api(app)
-# api.add_resource(user_resources.UserListResource, "/api/users")
-# api.add_resource(user_resources.UserResource, "/api/users/<int:user_id>")
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -35,48 +38,77 @@ def load_user(user_id):
     return db_sess.query(User).get(user_id)
 
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 @app.route('/complete_tasks', methods=['GET', 'POST'])
 @app.route('/', methods=['GET', 'POST'])
-def main():
-    if current_user.is_authenticated:
-        form = AddTask()
+@app.route('/<task_name>', methods=['GET', 'POST'])
+def main(task_name=None):
+    if not current_user.is_authenticated:
+        return render_template("intro.html")
+    change_task_form = TaskChangeForm()
+    add_task_form = AddTask()
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.id == current_user.id).first()
+    tasks_data = []
+    for task_id in user.tasks.split():
+        task = db_sess.query(Task).filter(Task.id == int(task_id)).first()
+        if request.url.split("/")[1] and task.complete:
+            tasks_data.append(task)
+        elif task_name is not None:
+            tasks_data.append(task)
+        elif not request.url.split("/")[-1] and not task.complete:
+            tasks_data.append(task)
+    tasks_data.reverse()
+    if add_task_form.validate_on_submit():
+        task = db_sess.query(Task).filter(Task.title == add_task_form.task_title.data).first()
+        if not task:
+            task = Task(title=add_task_form.task_title.data)
+            db_sess.add(task)
+            db_sess.commit()
+            task = db_sess.query(Task).filter(Task.title == add_task_form.task_title.data).first()
+            user.tasks += " " + str(task.id)
+            db_sess.commit()
+            return redirect("/")
+        return render_template('index.html', message="Такая задача уже существует",
+                               form=add_task_form,
+                               tasks_data=tasks_data, change_form=change_task_form,
+                               task_name=task_name)
+        # user = db_sess.query(User).filter(User.id == current_user.id).first()
+    if not request.url.split("/")[-1]:
+        classes = ["nav-link active", "nav-link", "nav-link"]
+    else:
+        classes = ["nav-link", "nav-link", "nav-link active"]
+    return render_template(
+        "index.html",
+        title="Mega ToDo",
+        form=add_task_form,
+        tasks_data=tasks_data,
+        classes=classes, change_form=change_task_form, task_name=task_name)
 
-        db_sess = db_session.create_session()
-        user = db_sess.query(User).filter(User.id == current_user.id).first()
-        tasks_data = []
-        for task_id in user.tasks.split():
-            task = db_sess.query(Task).filter(Task.id == int(task_id)).first()
-            if request.url.split("/")[-1] and task.complete:
-                tasks_data.append(task)
-            elif not request.url.split("/")[-1] and not task.complete:
-                tasks_data.append(task)
-        tasks_data.reverse()
-        if form.validate_on_submit():
-            task = db_sess.query(Task).filter(Task.title == form.task_title.data).first()
-            if not task:
-                task = Task(title=form.task_title.data)
-                db_sess.add(task)
-                db_sess.commit()
-                task = db_sess.query(Task).filter(Task.title == form.task_title.data).first()
 
-                user.tasks += " " + str(task.id)
-                db_sess.commit()
-                return redirect("/")
-            return render_template('index.html', message="Такая задача уже существует", form=form,
-                                   tasks_data=tasks_data)
-            # user = db_sess.query(User).filter(User.id == current_user.id).first()
-        if not request.url.split("/")[-1]:
-            print(request.url.split("/")[-1])
-            classes = ["nav-link active", "nav-link", "nav-link"]
-        else:
-            classes = ["nav-link", "nav-link", "nav-link active"]
-        return render_template(
-            "index.html",
-            title="Mega ToDo",
-            form=form,
-            tasks_data=tasks_data,
-            classes=classes)
-    return render_template("intro.html")
+@app.route("/first_handler", methods=["POST", "GET"])
+def first_handler():
+    form = TaskChangeForm()
+    if form.validate_on_submit():
+        # print(form.date.data)
+        # print(type(form.date.data))
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect("/")
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file')
+            return redirect("/")
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            open(app.config['UPLOAD_FOLDER'] + "/" + filename, "wb").close()
+            file.save(app.config['UPLOAD_FOLDER'] + "/" + filename)
+
+    return redirect("/")
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -138,9 +170,10 @@ def settings():
 
 
 @app.route('/test')
+@login_required
 def test():
     form = TaskChangeForm()
-    return render_template("test.html", form=forn)
+    return render_template("test.html", form=form)
 
 
 @app.route('/logout')
@@ -148,9 +181,6 @@ def test():
 def logout():
     logout_user()
     return redirect("/")
-
-
-
 
 
 @app.errorhandler(404)

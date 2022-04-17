@@ -178,5 +178,5 @@ def change_task():
 
 @blueprint.route('/api/files/add', methods=["POST"])
 @jwt_required
-def change_task():
-    pass #todo загрузка файлов
+def add_file():
+    pass  # todo загрузка файлов
