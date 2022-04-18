@@ -1,4 +1,22 @@
 let current_date
+var jwtoken = getCookie("jwt")
+let dates = []
+
+var xhr = new XMLHttpRequest();
+xhr.open('GET', '/api/users/tasks', false);
+xhr.setRequestHeader('Authorization', 'Bearer ' + jwtoken);
+xhr.onload = function (event) {
+    const data = JSON.parse(xhr.response)["tasks"]
+    console.log(data)
+    for (const task of data) {
+        const date = new Date(task.deadline)
+        dates.push([date.getDate(), date.getMonth(), date.getFullYear()].join("-"))
+    }
+}
+xhr.setRequestHeader('Content-Type', 'application/json');
+xhr.send();
+
+
 
 (function(selector) {
     initCalendar(document.querySelector(selector));
@@ -116,11 +134,11 @@ let current_date
         arr = unshiftElems(unshiftElemsNum, '', arr);
         arr = pushElems(pushElemsNum, '', arr);
         arr = chunkArr(7, arr);
-
-        createTable(arr, dates);
+        console.log(arr)
+        createTable(arr, dates, month, year);
     }
 
-    function createTable(arr, parent) {
+    function createTable(arr, parent, month, year) {
         parent.innerHTML = '';
         for (let i = 0; i < arr.length; i++) {
             let tr = document.createElement('tr');
@@ -128,7 +146,13 @@ let current_date
             for (let j = 0; j < arr[i].length; j++) {
                 let td = document.createElement('td');
                 td.innerHTML = arr[i][j];
+                const cur_date = [arr[i][j], month, year].join("-")
+                if (dates.indexOf(cur_date) !== -1) {
+                    td.style.color = "#0d6efd"
+                }
+
                 tr.appendChild(td);
+
             }
             parent.appendChild(tr);
         }
@@ -247,7 +271,6 @@ document.getElementById('dates')
             calendar_title.innerText = "Задачи на " +
                 fix_num(event.target.outerText) + "." + fix_num(current_date[1] + 1) + "." + current_date[0]
 
-            var jwtoken = getCookie("jwt")
             const date = [+event.target.outerText, current_date[1] + 1, current_date[0]]
             var xhr = new XMLHttpRequest();
             xhr.open('GET', '/api/tasks/by_date/' + date.join("-"), false);
