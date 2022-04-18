@@ -136,19 +136,24 @@ def first_handler(task_name=None):
 
         curr_task.deadline = form.date.data
         curr_task.description = form.description.data
-        db_sess.commit()
 
+        # count = len(os.listdir(app.config['UPLOAD_FOLDER']))
         # if 'file' not in request.files:
         #     flash('No file part')
         #     return redirect("/")
         # file = request.files['file']
+        #
         # if file.filename == '':
         #     flash('No selected file')
         #     return redirect("/")
         # if file and allowed_file(file.filename):
+        #     file.filename = str(count + 1)
         #     filename = secure_filename(file.filename)
         #     open(app.config['UPLOAD_FOLDER'] + "/" + filename, "wb").close()
         #     file.save(app.config['UPLOAD_FOLDER'] + "/" + filename)
+        # db_sess.query(File)
+        db_sess.commit()
+
 
     return redirect("/")
 
