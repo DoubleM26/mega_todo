@@ -14,6 +14,7 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from data import db_session, api
 from data.User import User
 from data.Task import Task
+from data.File import File
 from data.api import create_jwt_for_user
 from forms.registerform import RegisterForm
 from forms.taskchangeform import TaskChangeForm
@@ -55,8 +56,10 @@ def default():
            defaults={'complete': True, 'task_id': None})
 @app.route('/todo/<search_data>', methods=['GET', 'POST'],
            defaults={'complete': False, 'task_id': None})
-@app.route('/task/<int:task_id>', methods=['GET', 'POST'], defaults={'search_data': "", 'complete': False})
-@app.route('/complete_task/<int:task_id>', methods=['GET', 'POST'], defaults={'search_data': "", 'complete': True})
+@app.route('/task/<int:task_id>', methods=['GET', 'POST'],
+           defaults={'search_data': "", 'complete': False})
+@app.route('/complete_task/<int:task_id>', methods=['GET', 'POST'],
+           defaults={'search_data': "", 'complete': True})
 @app.route('/complete_tasks', methods=['GET', 'POST'],
            defaults={'search_data': "", 'complete': True, 'task_id': None})
 @app.route('/todo', methods=['GET', 'POST'],
@@ -122,40 +125,43 @@ def main(search_data, complete, task_id):
 def first_handler(task_name=None):
     if task_name is None:
         return redirect("/")
-    # todo описание файлы
     form = TaskChangeForm()
-    if form.validate_on_submit():
-        curr_task = None
-        db_sess = db_session.create_session()
 
-        user = db_sess.query(User).filter(User.id == current_user.id).first()
-        for task_id in user.tasks.split():
-            task = db_sess.query(Task).filter(Task.id == int(task_id)).first()
-            if task.title == task_name:
-                curr_task = task
+    db_sess = db_session.create_session()
+    curr_task = db_sess.query(Task).filter(Task.id == task_name).first()
+    user = db_sess.query(User).filter(User.id == current_user.id).first()
 
-        curr_task.deadline = form.date.data
-        curr_task.description = form.description.data
+    curr_task.deadline = form.date.data
+    curr_task.description = form.description.data
 
-        # count = len(os.listdir(app.config['UPLOAD_FOLDER']))
-        # if 'file' not in request.files:
-        #     flash('No file part')
-        #     return redirect("/")
-        # file = request.files['file']
-        #
-        # if file.filename == '':
-        #     flash('No selected file')
-        #     return redirect("/")
-        # if file and allowed_file(file.filename):
-        #     file.filename = str(count + 1)
-        #     filename = secure_filename(file.filename)
-        #     open(app.config['UPLOAD_FOLDER'] + "/" + filename, "wb").close()
-        #     file.save(app.config['UPLOAD_FOLDER'] + "/" + filename)
-        # db_sess.query(File)
+    # --
+
+    if 'file' not in request.files:
+        flash('No file part')
         db_sess.commit()
-        if curr_task.complete:
-            return redirect("/complete_tasks")
+        return redirect("/")
 
+    file = request.files['file']
+
+    if file.filename == '':
+        flash('No selected file')
+        db_sess.commit()
+        return redirect("/")
+
+    if file and allowed_file(file.filename):
+        sess_file = File()
+        print(file.filename)
+        sess_file.extension = file.filename.split(".")[-1]
+        file.filename = str(sess_file.id) + "." + sess_file.extension
+        open(app.config['UPLOAD_FOLDER'] + "/" + file.filename, "wb").close()
+        file.save(app.config['UPLOAD_FOLDER'] + "/" + file.filename)
+
+    db_sess.query(File)
+
+    if curr_task.complete:
+        db_sess.commit()
+        return redirect("/complete_tasks")
+    db_sess.commit()
     return redirect("/")
 
 

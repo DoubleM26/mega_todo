@@ -78,7 +78,7 @@
         {% if curr_task %}
             <h3>{{curr_task.title}}</h3>
             <h6>Создано: {{curr_task.creation_date.day}}.{{curr_task.creation_date.month}}.{{curr_task.creation_date.year}}</h6>
-            <form action="{{ url_for('first_handler', task_name=curr_task.title) }}" method="post" enctype="multipart/form-data">
+            <form action="{{ url_for('first_handler', task_name=curr_task.id) }}" method="post" enctype="multipart/form-data">
             {{ change_form.hidden_tag() }}
             <p>{{ change_form.submit(type="submit", class="btn btn-primary") }}</p>
             <div>{{ message }}</div>

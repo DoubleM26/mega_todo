@@ -6,8 +6,8 @@ from sqlalchemy_serializer import SerializerMixin
 from .db_session import SqlAlchemyBase
 
 
-class Task(SqlAlchemyBase, UserMixin, SerializerMixin):
-    __tablename__ = 'tasks'
+class File(SqlAlchemyBase, UserMixin, SerializerMixin):
+    __tablename__ = 'files'
 
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)
