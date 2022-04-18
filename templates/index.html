@@ -3,7 +3,7 @@
 {% block content %}
 <form action="" method="post" id="task_create" style="margin-top: 4px">
     {{ form.hidden_tag() }}
-    {{ form.task_title(class="task_create", placeholder="Добавить задачу", id="task_create") }}<br>
+    {{ form.task_title(class="task_create", placeholder="Добавить задачу", id="task_create", maxlength="30") }}<br>
     {% for error in form.task_title.errors %}
     <div class="alert alert-danger" role="alert">
         {{ error }}
