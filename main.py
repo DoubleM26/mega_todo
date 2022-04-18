@@ -47,12 +47,18 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@app.route('/complete_tasks/<search_data>', methods=['GET', 'POST'], defaults={'complete': True, 'task_name': None})
-@app.route('/<search_data>', methods=['GET', 'POST'], defaults={'complete': False, 'task_name': None})
-@app.route('/complete_tasks', methods=['GET', 'POST'], defaults={'search_data': "", 'complete': True, 'task_name': None})
-@app.route('/', methods=['GET', 'POST'], defaults={'search_data': "", 'complete': False, 'task_name': None})
+
+@app.route('/complete_tasks/<search_data>', methods=['GET', 'POST'],
+           defaults={'complete': True, 'task_name': None})
+@app.route('/<search_data>', methods=['GET', 'POST'],
+           defaults={'complete': False, 'task_name': None})
+@app.route('/complete_tasks', methods=['GET', 'POST'],
+           defaults={'search_data': "", 'complete': True, 'task_name': None})
+@app.route('/', methods=['GET', 'POST'],
+           defaults={'search_data': "", 'complete': False, 'task_name': None})
 @app.route('/task/<task_name>', defaults={'search_data': "", 'complete': False})
 def main(search_data, complete, task_name):
+
     if not current_user.is_authenticated:
         return render_template("intro.html")
     change_task_form = TaskChangeForm()
@@ -67,14 +73,6 @@ def main(search_data, complete, task_name):
                 tasks_data.append(task)
             elif not complete and not task.complete:
                 tasks_data.append(task)
-    #     for task_id in user.tasks.split():
-    #         task = db_sess.query(Task).filter(Task.id == int(task_id)).first()
-    #         if request.url.split("/")[1] and task.complete:
-    #             tasks_data.append(task)
-    #         elif task_name is not None:
-    #             tasks_data.append(task)
-    #         elif not request.url.split("/")[-1] and not task.complete:
-    #             tasks_data.append(task)
     tasks_data.reverse()
     if form.validate_on_submit():
         task = Task(title=form.task_title.data)
@@ -98,7 +96,6 @@ def main(search_data, complete, task_name):
         complete=str(complete),
         lower=lambda x: x.lower(),
         classes=classes, change_form=change_task_form, task_name=task_name)
-
 
 
 @app.route("/first_handler", methods=["POST", "GET"])
