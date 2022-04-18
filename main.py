@@ -47,21 +47,40 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
-@app.route('/complete_tasks/<search_data>', methods=['GET', 'POST'],
-           defaults={'complete': True, 'task_name': None})
-@app.route('/<search_data>', methods=['GET', 'POST'],
-           defaults={'complete': False, 'task_name': None})
-@app.route('/complete_tasks', methods=['GET', 'POST'],
-           defaults={'search_data': "", 'complete': True, 'task_name': None})
-@app.route('/', methods=['GET', 'POST'],
-           defaults={'search_data': "", 'complete': False, 'task_name': None})
-@app.route('/task/<task_name>', defaults={'search_data': "", 'complete': False})
-def main(search_data, complete, task_name):
-
+@app.route('/')
+def default():
     if not current_user.is_authenticated:
         return render_template("intro.html")
+    return redirect("/uncompleted_tasks")
+
+
+@app.route('/complete_tasks/<search_data>', methods=['GET', 'POST'],
+           defaults={'complete': True, 'task_name': None, 'cringe': 2})
+@app.route('/uncompleted_tasks/<search_data>', methods=['GET', 'POST'],
+           defaults={'complete': False, 'task_name': None, 'cringe': 3})
+@app.route('/task/<task_name>', defaults={'search_data': "", 'complete': False, 'cringe': 1})
+@app.route('/complete_tasks', methods=['GET', 'POST'],
+           defaults={'search_data': "", 'complete': True, 'task_name': None, 'cringe': 4})
+@app.route('/uncompleted_tasks', methods=['GET', 'POST'],
+           defaults={'search_data': "", 'complete': False, 'task_name': None, 'cringe': 5})
+def main(search_data, complete, task_name, cringe):
+    curr_task = None
+    if task_name is not None:
+        db_sess = db_session.create_session()
+
+        user = db_sess.query(User).filter(User.id == current_user.id).first()
+        for task_id in user.tasks.split():
+            task = db_sess.query(Task).filter(Task.id == int(task_id)).first()
+            if task.title == task_name:
+                curr_task = task
+
+
     change_task_form = TaskChangeForm()
+    change_task_form.title = task_name
+    if curr_task is not None:
+        change_task_form.date.data = curr_task.deadline
+        change_task_form.description.data = curr_task.description
+
     form = AddTask()
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.id == current_user.id).first()
@@ -95,26 +114,41 @@ def main(search_data, complete, task_name):
         tasks_data=tasks_data,
         complete=str(complete),
         lower=lambda x: x.lower(),
-        classes=classes, change_form=change_task_form, task_name=task_name)
+        classes=classes, change_form=change_task_form, task_name=task_name, curr_task=curr_task)
 
 
-@app.route("/first_handler", methods=["POST", "GET"])
-def first_handler():
+@app.route("/first_handler/<task_name>", methods=["POST", "GET"])
+@login_required
+def first_handler(task_name=None):
+    if task_name is None:
+        return redirect("/")
+    # todo описание файлы
     form = TaskChangeForm()
     if form.validate_on_submit():
-        # print(form.date.data)
-        # print(type(form.date.data))
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect("/")
-        file = request.files['file']
-        if file.filename == '':
-            flash('No selected file')
-            return redirect("/")
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            open(app.config['UPLOAD_FOLDER'] + "/" + filename, "wb").close()
-            file.save(app.config['UPLOAD_FOLDER'] + "/" + filename)
+        curr_task = None
+        db_sess = db_session.create_session()
+
+        user = db_sess.query(User).filter(User.id == current_user.id).first()
+        for task_id in user.tasks.split():
+            task = db_sess.query(Task).filter(Task.id == int(task_id)).first()
+            if task.title == task_name:
+                curr_task = task
+
+        curr_task.deadline = form.date.data
+        curr_task.description = form.description.data
+        db_sess.commit()
+
+        # if 'file' not in request.files:
+        #     flash('No file part')
+        #     return redirect("/")
+        # file = request.files['file']
+        # if file.filename == '':
+        #     flash('No selected file')
+        #     return redirect("/")
+        # if file and allowed_file(file.filename):
+        #     filename = secure_filename(file.filename)
+        #     open(app.config['UPLOAD_FOLDER'] + "/" + filename, "wb").close()
+        #     file.save(app.config['UPLOAD_FOLDER'] + "/" + filename)
 
     return redirect("/")
 

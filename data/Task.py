@@ -18,3 +18,4 @@ class Task(SqlAlchemyBase, UserMixin, SerializerMixin):
     deadline = sqlalchemy.Column(sqlalchemy.DateTime, nullable=True)
     files = sqlalchemy.Column(sqlalchemy.String, default="")
 
+

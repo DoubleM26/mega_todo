@@ -85,15 +85,19 @@
 
     <div style="float:right; width: 70%; ">
         {% if task_name == None %}
-        <div style="text-align: center;">
-            <img style=" width:50%; position: relative" src="../static/img/fortnite_food.jpg">
-            <h3> Задача не выбрана</h3>
-        </div>
+            <div style="text-align: center;">
+                <img style=" width:50%; position: relative" src="../static/img/fortnite_food.jpg">
+                <h3> Задача не выбрана</h3>
+            </div>
+        {% elif curr_task == None %}
+            <div style="text-align: center;">
+                <img style=" width:50%; position: relative" src="../static/img/not_found.png">
+            </div>
         {% else %}
-        <h3>{{task_name}}</h3>
-        <form action="{{ url_for('first_handler') }}" method="post" enctype="multipart/form-data">
+            <h3>{{task_name}}</h3>
+            <h6>Создано: {{curr_task.creation_date.day}}.{{curr_task.creation_date.month}}.{{curr_task.creation_date.year}}</h6>
+            <form action="{{ url_for('first_handler', task_name=task_name) }}" method="post" enctype="multipart/form-data">
             {{ change_form.hidden_tag() }}
-            <p>{{ change_form.complete() }} {{ change_form.complete.label }}</p>
             <p>{{ change_form.submit(type="submit", class="btn btn-primary") }}</p>
             <div>{{ message }}</div>
             <p>
@@ -126,6 +130,7 @@
 
 
         </form>
+        
         {%endif%}
     </div>
 </div>

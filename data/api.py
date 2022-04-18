@@ -5,6 +5,7 @@ from flask_jwt_simple import get_jwt_identity
 from data import db_session
 from data.User import User
 from data.Task import Task
+import datetime as dt
 
 blueprint = flask.Blueprint(
     'api',
@@ -182,7 +183,8 @@ def get_tasks_by_date(date):
     user = db_sess.query(User).filter(User.email == get_jwt_identity()["email"]).first()
     for task_id in user.tasks.split():
         task = db_sess.query(Task).filter(Task.id == int(task_id)).first()
-        tasks_data.append(task.to_dict())
+        if task.deadline == dt.datetime.strptime(date, "%d-%m-%Y"):
+            tasks_data.append(task.to_dict())
     tasks_data.reverse()
     return jsonify(tasks_data)
 

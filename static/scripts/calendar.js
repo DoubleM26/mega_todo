@@ -245,10 +245,10 @@ document.getElementById('dates')
             const calendar_title = document.getElementById('calendar_title')
             console.log(calendar_title)
             calendar_title.innerText = "Задачи на " +
-                fix_num(event.target.outerText) + "." + fix_num(current_date[1]) + "." + current_date[0]
+                fix_num(event.target.outerText) + "." + fix_num(current_date[1] + 1) + "." + current_date[0]
 
             var jwtoken = getCookie("jwt")
-            const date = [+event.target.outerText, current_date[1], current_date[0]]
+            const date = [+event.target.outerText, current_date[1] + 1, current_date[0]]
             var xhr = new XMLHttpRequest();
             xhr.open('GET', '/api/tasks/by_date/' + date.join("-"), false);
             xhr.setRequestHeader('Authorization', 'Bearer ' + jwtoken);
