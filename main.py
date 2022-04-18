@@ -43,36 +43,40 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 @app.route('/')
 def default():
     if not current_user.is_authenticated:
         return render_template("intro.html")
-    return redirect("/uncompleted_tasks")
+    return redirect("/todo")
 
 
 @app.route('/complete_tasks/<search_data>', methods=['GET', 'POST'],
-           defaults={'complete': True, 'task_name': None, 'cringe': 2})
-@app.route('/uncompleted_tasks/<search_data>', methods=['GET', 'POST'],
-           defaults={'complete': False, 'task_name': None, 'cringe': 3})
-@app.route('/task/<task_name>', defaults={'search_data': "", 'complete': False, 'cringe': 1})
+           defaults={'complete': True, 'task_id': None})
+@app.route('/todo/<search_data>', methods=['GET', 'POST'],
+           defaults={'complete': False, 'task_id': None})
+@app.route('/task/<int:task_id>', methods=['GET', 'POST'], defaults={'search_data': "", 'complete': False})
+@app.route('/complete_task/<int:task_id>', methods=['GET', 'POST'], defaults={'search_data': "", 'complete': True})
 @app.route('/complete_tasks', methods=['GET', 'POST'],
-           defaults={'search_data': "", 'complete': True, 'task_name': None, 'cringe': 4})
-@app.route('/uncompleted_tasks', methods=['GET', 'POST'],
-           defaults={'search_data': "", 'complete': False, 'task_name': None, 'cringe': 5})
-def main(search_data, complete, task_name, cringe):
+           defaults={'search_data': "", 'complete': True, 'task_id': None})
+@app.route('/todo', methods=['GET', 'POST'],
+           defaults={'search_data': "", 'complete': False, 'task_id': None})
+def main(search_data, complete, task_id):
     curr_task = None
-    if task_name is not None:
+    print(task_id, "f")
+    if task_id is not None:
         db_sess = db_session.create_session()
 
         user = db_sess.query(User).filter(User.id == current_user.id).first()
-        for task_id in user.tasks.split():
-            task = db_sess.query(Task).filter(Task.id == int(task_id)).first()
-            if task.title == task_name:
+        for i in user.tasks.split():
+            task = db_sess.query(Task).filter(Task.id == int(i)).first()
+            # print(task.id)
+            if task.id == task_id:
                 curr_task = task
-
+                print(curr_task.title)
 
     change_task_form = TaskChangeForm()
-    change_task_form.title = task_name
+    change_task_form.title = "Maga ToDo"
     if curr_task is not None:
         change_task_form.date.data = curr_task.deadline
         change_task_form.description.data = curr_task.description
@@ -110,7 +114,7 @@ def main(search_data, complete, task_name, cringe):
         tasks_data=tasks_data,
         complete=str(complete),
         lower=lambda x: x.lower(),
-        classes=classes, change_form=change_task_form, task_name=task_name, curr_task=curr_task)
+        classes=classes, change_form=change_task_form, curr_task=curr_task)
 
 
 @app.route("/first_handler/<task_name>", methods=["POST", "GET"])
@@ -149,7 +153,8 @@ def first_handler(task_name=None):
         #     file.save(app.config['UPLOAD_FOLDER'] + "/" + filename)
         # db_sess.query(File)
         db_sess.commit()
-
+        if curr_task.complete:
+            return redirect("/complete_tasks")
 
     return redirect("/")
 
@@ -217,7 +222,7 @@ def settings():
 @app.route('/calendar')
 def calendar():
     classes = ["nav-link", "nav-link active", "nav-link"]
-    return render_template("calendar.html", title="Календарь", classes=classes, date=date)
+    return render_template("calendar.html", title="Календарь", classes=classes)
 
 
 @app.route('/test')

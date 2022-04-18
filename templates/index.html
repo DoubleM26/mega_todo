@@ -12,43 +12,28 @@
     <div style="color: red;">{{ message }}</div>
 </form>
 <script>
-    const form = document.getElementById("task_create")
-    form.addEventListener("keydown", (event) => {
-        if (event.code === "Enter") {
-            form.submit()
-        }
-    })
-
     const search = document.getElementById("search_task")
     search.value = '{{search_data}}'
-    search.addEventListener('click', () => {
-        search.addEventListener("search", (event) => {
-            const href = window.location.href.split("/")
-                if ({{lower(complete)}}) {
-                    window.location.replace(href.slice(0, 4).join("/") + "/" + search.value)
-                } else {
-                    window.location.replace(href.slice(0, 3).join("/") + "/" + search.value)
-                }
-        })
-    })
-
-
 </script>
+<script src="http://127.0.0.1:8080/static/js/index.js"></script>
 <div>
     <div>
         <div style="float:left; width: 30%">
             {% for task in tasks_data %}
-            <div class="task">
-                <div class="form-check">
+            <div class="task" style="display: flex">
+                <div class="form-check" style="width: 100%; overflow: hidden; text-overflow: ellipsis;">
                     {% if task.complete %}
                     <input class="form-check-input" type="checkbox" value="" id="{{task.id}}" checked
                            style="cursor: pointer">
                     {% else %}
                     <input class="form-check-input" type="checkbox" value="" id="{{task.id}}" style="cursor: pointer">
                     {% endif %}
-                    <label class="form-check-label" for="{{task.id}}" style="cursor: pointer">
+                    <label class="form-check-label" for="{{task.id}}" style="cursor: pointer; text-overflow: ellipsis;">
                         {{task.title}}
                     </label>
+                </div>
+                <div style="cursor: pointer; min-width: 20px" id="clickable_{{task.id}}">
+                    <img style="height: 16px; margin-left: 4px" src="http://127.0.0.1:8080/static/img/arrow.png">
                 </div>
             </div>
             <script>
@@ -69,10 +54,16 @@
             window.location.reload();
         })
 
-
-
-
-
+        document.getElementById('clickable_{{task.id}}').addEventListener("click", (event) => {
+            const href = window.location.href.split("/").slice(0, 3)
+            if ({{lower(complete)}}) {
+                href.push('complete_task')
+            } else {
+                href.push('task')
+            }
+            href.push('{{task.id}}')
+            window.location.replace(href.join("/"))
+        })
 
             </script>
         {% endfor %}
@@ -83,20 +74,11 @@
     <p style="margin-top: 12px">Кажется, тут пусто</p>
     {% endif %}
 
-    <div style="float:right; width: 70%; ">
-        {% if task_name == None %}
-            <div style="text-align: center;">
-                <img style=" width:50%; position: relative" src="../static/img/fortnite_food.jpg">
-                <h3> Задача не выбрана</h3>
-            </div>
-        {% elif curr_task == None %}
-            <div style="text-align: center;">
-                <img style=" width:50%; position: relative" src="../static/img/not_found.png">
-            </div>
-        {% else %}
-            <h3>{{task_name}}</h3>
+    <div style="float:right; width: 60%; top: 40px ">
+        {% if curr_task %}
+            <h3>{{curr_task.title}}</h3>
             <h6>Создано: {{curr_task.creation_date.day}}.{{curr_task.creation_date.month}}.{{curr_task.creation_date.year}}</h6>
-            <form action="{{ url_for('first_handler', task_name=task_name) }}" method="post" enctype="multipart/form-data">
+            <form action="{{ url_for('first_handler', task_name=curr_task.title) }}" method="post" enctype="multipart/form-data">
             {{ change_form.hidden_tag() }}
             <p>{{ change_form.submit(type="submit", class="btn btn-primary") }}</p>
             <div>{{ message }}</div>
