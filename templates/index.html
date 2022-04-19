@@ -87,6 +87,29 @@
                   enctype="multipart/form-data">
                 {{ change_form.hidden_tag() }}
                 <p>{{ change_form.submit(type="submit", class="btn btn-primary") }}</p>
+                    <img id="delete" src="http://127.0.0.1:8080/static/img/trash_bin.png" style="height: 30px; margin-left: 4px">
+                <script>
+        function getCookie(name) {
+            let matches = document.cookie.match(new RegExp(
+                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+            ));
+            return matches ? decodeURIComponent(matches[1]) : undefined;
+        }
+
+        var jwtoken = getCookie("jwt")
+
+        document.getElementById('delete').addEventListener("click", (event) => {
+            var xhr = new XMLHttpRequest();
+            xhr.open('DELETE', '/api/tasks/delete/' + '{{curr_task.id}}', false);
+            xhr.setRequestHeader('Authorization', 'Bearer ' + jwtoken);
+            xhr.send();
+            window.location.reload();
+        })
+
+
+
+                </script>
+
                 <div>{{ message }}</div>
                 <p>
                     {{change_form.date.label}}<br>
@@ -131,7 +154,7 @@
         document.getElementById('file{{file.id}}').addEventListener("click", (event) => {
             var xhr = new XMLHttpRequest();
             xhr.open('DELETE', '/api/delete/file/by/id/' + '{{file.id}}/{{curr_task.id}}', false);
-            xhr.setRequestHeader('Authorization', 'Bearer ' + jwtoken);
+            xhr.setRequestHeader('authorization', 'Bearer ' + jwtoken);
             xhr.send();
             window.location.reload();
         })
@@ -145,6 +168,7 @@
                 <br>
 
             </form>
+
 
             {%endif%}
         </div>

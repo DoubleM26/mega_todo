@@ -141,26 +141,25 @@ def create_new_task():
     return jsonify({"message": "success"})
 
 
-@blueprint.route('/api/tasks/delete', methods=["DELETE"])
+@blueprint.route('/api/tasks/delete/<int:task_id>', methods=["DELETE"])
 @jwt_required
-def delete_task():
-    if not request.json:
-        return jsonify({"error": "Empty request"})
-    elif not 'title' in request.json.keys():
-        return jsonify({"error": "Bad request"})
+def delete_task(task_id):
+    print("curr_task:", task_id)
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.email == get_jwt_identity()["email"]).first()
-    task = db_sess.query(Task).filter(Task.title == request.json['title']).first()
+    task = db_sess.query(Task).filter(Task.id == task_id).first()
     if not task:
         return jsonify({"error": "Task does not exists"})
-    db_sess.delete(task)  # todo
+    db_sess.query(Task).filter_by(id=task_id).delete()
     db_sess.commit()
     print(user.tasks)
+
     print(type(user.tasks))
     user.tasks = user.tasks.replace(str(task.id), "", 1)
     # data = user.tasks.split()
     # data.remove(str(task.id))
     # user.tasks = data
+    print("user_tasks: ", user.tasks)
     db_sess.commit()
     return jsonify({"message": "success"})
 
