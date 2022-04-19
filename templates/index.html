@@ -15,7 +15,7 @@
     const search = document.getElementById("search_task")
     search.value = '{{search_data}}'
 </script>
-<script src="http://127.0.0.1:8080/static/js/index.js"></script>
+<script src="http://pipeweb.ru/static/js/index.js"></script>
 <div>
     <div>
         <div style="float:left; width: 30%">
@@ -33,7 +33,7 @@
                     </label>
                 </div>
                 <div style="cursor: pointer; min-width: 20px" id="clickable_{{task.id}}">
-                    <img style="height: 16px; margin-left: 4px" src="http://127.0.0.1:8080/static/img/arrow.png">
+                    <img style="height: 16px; margin-left: 4px" src="http://pipeweb.ru/static/img/arrow.png">
                 </div>
             </div>
             <script>
@@ -72,7 +72,7 @@
                   enctype="multipart/form-data">
                 {{ change_form.hidden_tag() }}
                 <p>{{ change_form.submit(type="submit", class="btn btn-primary") }}</p>
-                    <img id="delete" src="http://127.0.0.1:8080/static/img/trash_bin.png" style="height: 30px; margin-left: 4px">
+                    <img id="delete" src="http://pipeweb.ru/static/img/trash_bin.png" style="height: 30px; margin-left: 4px">
                 <script>
                     document.getElementById('delete').addEventListener("click", (event) => {
                         var xhr = new XMLHttpRequest();
