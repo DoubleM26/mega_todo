@@ -14,8 +14,6 @@
 <script>
     const search = document.getElementById("search_task")
     search.value = '{{search_data}}'
-
-
 </script>
 <script src="http://127.0.0.1:8080/static/js/index.js"></script>
 <div>
@@ -39,40 +37,27 @@
                 </div>
             </div>
             <script>
-        function getCookie(name) {
-            let matches = document.cookie.match(new RegExp(
-                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-            ));
-            return matches ? decodeURIComponent(matches[1]) : undefined;
-        }
+                document.getElementById('{{task.id}}').addEventListener("click", (event) => {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('POST', '/api/tasks/change/' + '{{task.id}}', false);
+                    xhr.setRequestHeader('Authorization', 'Bearer ' + jwtoken);
+                    xhr.send();
+                    window.location.reload();
+                })
 
-        var jwtoken = getCookie("jwt")
-
-        document.getElementById('{{task.id}}').addEventListener("click", (event) => {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/api/tasks/change/' + '{{task.id}}', false);
-            xhr.setRequestHeader('Authorization', 'Bearer ' + jwtoken);
-            xhr.send();
-            window.location.reload();
-        })
-
-        document.getElementById('clickable_{{task.id}}').addEventListener("click", (event) => {
-            const href = window.location.href.split("/").slice(0, 3)
-            if ({{lower(complete)}}) {
-                href.push('complete_task')
-            } else {
-                href.push('task')
-            }
-            href.push('{{task.id}}')
-            window.location.replace(href.join("/"))
-        })
-
-
-
+                document.getElementById('clickable_{{task.id}}').addEventListener("click", (event) => {
+                    const href = window.location.href.split("/").slice(0, 3)
+                    if ({{lower(complete)}}) {
+                        href.push('complete_task')
+                    } else {
+                        href.push('task')
+                    }
+                    href.push('{{task.id}}')
+                    window.location.replace(href.join("/"))
+                })
             </script>
             {% endfor %}
         </div>
-
 
         {% if not tasks_data %}
         <p style="margin-top: 12px">Кажется, тут пусто</p>
@@ -89,25 +74,13 @@
                 <p>{{ change_form.submit(type="submit", class="btn btn-primary") }}</p>
                     <img id="delete" src="http://127.0.0.1:8080/static/img/trash_bin.png" style="height: 30px; margin-left: 4px">
                 <script>
-        function getCookie(name) {
-            let matches = document.cookie.match(new RegExp(
-                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-            ));
-            return matches ? decodeURIComponent(matches[1]) : undefined;
-        }
-
-        var jwtoken = getCookie("jwt")
-
-        document.getElementById('delete').addEventListener("click", (event) => {
-            var xhr = new XMLHttpRequest();
-            xhr.open('DELETE', '/api/tasks/delete/' + '{{curr_task.id}}', false);
-            xhr.setRequestHeader('Authorization', 'Bearer ' + jwtoken);
-            xhr.send();
-            window.location.reload();
-        })
-
-
-
+                    document.getElementById('delete').addEventListener("click", (event) => {
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('DELETE', '/api/tasks/delete/' + '{{curr_task.id}}', false);
+                        xhr.setRequestHeader('Authorization', 'Bearer ' + jwtoken);
+                        xhr.send();
+                        window.location.reload();
+                    })
                 </script>
 
                 <div>{{ message }}</div>
@@ -119,7 +92,6 @@
                     {{ error }}
                 </div>
                 {% endfor %}
-                </p>
                 <p>
                     {{ change_form.description.label }}<br>
                     {{ change_form.description(class="form-control") }}<br>
@@ -128,7 +100,6 @@
                     {{ error }}
                 </div>
                 {% endfor %}
-                </p>
                 <p>
                     {{change_form.file.label}}<br>
                     {{ change_form.file(class="form-control") }}<br>
@@ -137,29 +108,18 @@
                     {{ error }}
                 </div>
                 {% endfor %}
-                </p>
                 {% for file in files%}
                 <a href="/get_file/{{file.filename}}" download="">файл_{{file.id}}</a>
                 <img src="./../static/img/trash_bin.png" style="height: 16px; margin-left: 4px" id="file{{file.id}}">
                 <script>
-        function getCookie(name) {
-            let matches = document.cookie.match(new RegExp(
-                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-            ));
-            return matches ? decodeURIComponent(matches[1]) : undefined;
-        }
 
-        var jwtoken = getCookie("jwt")
-
-        document.getElementById('file{{file.id}}').addEventListener("click", (event) => {
-            var xhr = new XMLHttpRequest();
-            xhr.open('DELETE', '/api/delete/file/by/id/' + '{{file.id}}/{{curr_task.id}}', false);
-            xhr.setRequestHeader('authorization', 'Bearer ' + jwtoken);
-            xhr.send();
-            window.location.reload();
-        })
-
-
+                document.getElementById('file{{file.id}}').addEventListener("click", (event) => {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('DELETE', '/api/delete/file/by/id/' + '{{file.id}}/{{curr_task.id}}', false);
+                    xhr.setRequestHeader('authorization', 'Bearer ' + jwtoken);
+                    xhr.send();
+                    window.location.reload();
+                })
 
                 </script>
                 <br>
@@ -168,7 +128,6 @@
                 <br>
 
             </form>
-
 
             {%endif%}
         </div>

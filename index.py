@@ -285,6 +285,6 @@ def my_inv_unauth_token_callback(why):
 
 
 if __name__ == '__main__':
-    db_session.global_init("db/super_todo.db")
+    db_session.global_init("super_todo.db")
     app.register_blueprint(api.blueprint)
     app.run(port=8080, host='127.0.0.1')

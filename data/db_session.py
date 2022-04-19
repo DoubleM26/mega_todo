@@ -30,4 +30,6 @@ def global_init(db_file: str):
 
 def create_session() -> Session:
     global __factory
+    if not __factory:
+        global_init('super_todo.db')
     return __factory()
