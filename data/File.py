@@ -11,4 +11,5 @@ class File(SqlAlchemyBase, UserMixin, SerializerMixin):
 
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)
+    filename = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     extension = sqlalchemy.Column(sqlalchemy.String, nullable=False)

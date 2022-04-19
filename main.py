@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
 
-from flask import Flask, make_response, jsonify, render_template, request, url_for, flash
+from flask import Flask, make_response, jsonify, render_template, request, url_for, flash, send_file
 from flask_jwt_simple import JWTManager, jwt_required, get_jwt_identity
 from flask_restful import Api
 from werkzeug.utils import redirect, secure_filename
@@ -15,12 +15,12 @@ from data import db_session, api
 from data.User import User
 from data.Task import Task
 from data.File import File
-from data.api import create_jwt_for_user
+from data.api import create_jwt_for_user, UPLOAD_FOLDER, ALLOWED_EXTENSIONS, allowed_file
 from forms.registerform import RegisterForm
 from forms.taskchangeform import TaskChangeForm
 
-UPLOAD_FOLDER = './saved_files'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'aboba'
@@ -40,9 +40,7 @@ def load_user(user_id):
     return db_sess.query(User).get(user_id)
 
 
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 
 @app.route('/')
@@ -109,6 +107,13 @@ def main(search_data, complete, task_id):
         classes = ["nav-link active", "nav-link", "nav-link"]
     else:
         classes = ["nav-link", "nav-link", "nav-link active"]
+
+    #
+    files = []
+    if curr_task is not None:
+        for i in curr_task.files.split():
+            files.append(db_sess.query(File).filter(File.id == i).first())
+
     return render_template(
         "index.html",
         title="Mega ToDo",
@@ -117,6 +122,7 @@ def main(search_data, complete, task_id):
         tasks_data=tasks_data,
         complete=str(complete),
         lower=lambda x: x.lower(),
+        files=files,
         classes=classes, change_form=change_task_form, curr_task=curr_task)
 
 
@@ -129,7 +135,6 @@ def first_handler(task_name=None):
 
     db_sess = db_session.create_session()
     curr_task = db_sess.query(Task).filter(Task.id == task_name).first()
-    user = db_sess.query(User).filter(User.id == current_user.id).first()
 
     curr_task.deadline = form.date.data
     curr_task.description = form.description.data
@@ -149,14 +154,24 @@ def first_handler(task_name=None):
         return redirect("/")
 
     if file and allowed_file(file.filename):
+        curr_task = db_sess.query(Task).filter(Task.id == task_name).first()
         sess_file = File()
-        print(file.filename)
+        db_sess.add(sess_file)
         sess_file.extension = file.filename.split(".")[-1]
+        db_sess.commit()
         file.filename = str(sess_file.id) + "." + sess_file.extension
-        open(app.config['UPLOAD_FOLDER'] + "/" + file.filename, "wb").close()
-        file.save(app.config['UPLOAD_FOLDER'] + "/" + file.filename)
-
-    db_sess.query(File)
+        sess_file.filename = file.filename
+        print("-------", str(sess_file.id))
+        open(app.config['UPLOAD_FOLDER'] + "/" + str(sess_file.id) + "." + sess_file.extension,
+             "wb").close()
+        file.save(app.config['UPLOAD_FOLDER'] + "/" + str(sess_file.id) + "." + sess_file.extension)
+        print("-----------")
+        print("curr", curr_task.files)
+        if curr_task.files is None:
+            curr_task.files = str(sess_file.id)
+        else:
+            curr_task.files += " " + str(sess_file.id)
+        db_sess.commit()
 
     if curr_task.complete:
         db_sess.commit()
@@ -187,6 +202,12 @@ def register():
         db_sess.commit()
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
+
+
+@app.route('/get_file/<file_name>')
+@login_required
+def get_image(file_name):
+    return send_file("saved_files/" + file_name)
 
 
 @app.route('/login', methods=['GET', 'POST'])

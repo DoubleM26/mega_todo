@@ -14,6 +14,8 @@
 <script>
     const search = document.getElementById("search_task")
     search.value = '{{search_data}}'
+
+
 </script>
 <script src="http://127.0.0.1:8080/static/js/index.js"></script>
 <div>
@@ -65,57 +67,86 @@
             window.location.replace(href.join("/"))
         })
 
+
+
             </script>
-        {% endfor %}
-    </div>
+            {% endfor %}
+        </div>
 
 
-    {% if not tasks_data %}
-    <p style="margin-top: 12px">Кажется, тут пусто</p>
-    {% endif %}
+        {% if not tasks_data %}
+        <p style="margin-top: 12px">Кажется, тут пусто</p>
+        {% endif %}
 
-    <div style="float:right; width: 60%; top: 40px ">
-        {% if curr_task %}
+        <div style="float:right; width: 60%; top: 40px ">
+            {% if curr_task %}
             <h3>{{curr_task.title}}</h3>
-            <h6>Создано: {{curr_task.creation_date.day}}.{{curr_task.creation_date.month}}.{{curr_task.creation_date.year}}</h6>
-            <form action="{{ url_for('first_handler', task_name=curr_task.id) }}" method="post" enctype="multipart/form-data">
-            {{ change_form.hidden_tag() }}
-            <p>{{ change_form.submit(type="submit", class="btn btn-primary") }}</p>
-            <div>{{ message }}</div>
-            <p>
-                {{change_form.date.label}}<br>
-                {{ change_form.date(class="form-control") }}<br>
-                {% for error in change_form.date.errors %}
-            <div class="alert alert-danger" role="alert">
-                {{ error }}
-            </div>
-            {% endfor %}
-            </p>
-            <p>
-                {{ change_form.description.label }}<br>
-                {{ change_form.description(class="form-control") }}<br>
-                {% for error in change_form.description.errors %}
-            <div class="alert alert-danger" role="alert">
-                {{ error }}
-            </div>
-            {% endfor %}
-            </p>
-            <p>
-                {{change_form.file.label}}<br>
-                {{ change_form.file(class="form-control") }}<br>
-                {% for error in change_form.file.errors %}
-            <div class="alert alert-danger" role="alert">
-                {{ error }}
-            </div>
-            {% endfor %}
-            </p>
+            <h6>Создано:
+                {{curr_task.creation_date.day}}.{{curr_task.creation_date.month}}.{{curr_task.creation_date.year}}</h6>
+            <form action="{{ url_for('first_handler', task_name=curr_task.id) }}" method="post"
+                  enctype="multipart/form-data">
+                {{ change_form.hidden_tag() }}
+                <p>{{ change_form.submit(type="submit", class="btn btn-primary") }}</p>
+                <div>{{ message }}</div>
+                <p>
+                    {{change_form.date.label}}<br>
+                    {{ change_form.date(class="form-control") }}<br>
+                    {% for error in change_form.date.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+                </p>
+                <p>
+                    {{ change_form.description.label }}<br>
+                    {{ change_form.description(class="form-control") }}<br>
+                    {% for error in change_form.description.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+                </p>
+                <p>
+                    {{change_form.file.label}}<br>
+                    {{ change_form.file(class="form-control") }}<br>
+                    {% for error in change_form.file.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+                </p>
+                {% for file in files%}
+                <a href="/get_file/{{file.filename}}" download="">файл_{{file.id}}</a>
+                <img src="./../static/img/trash_bin.png" style="height: 16px; margin-left: 4px" id="file{{file.id}}">
+                <script>
+        function getCookie(name) {
+            let matches = document.cookie.match(new RegExp(
+                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+            ));
+            return matches ? decodeURIComponent(matches[1]) : undefined;
+        }
+
+        var jwtoken = getCookie("jwt")
+
+        document.getElementById('file{{file.id}}').addEventListener("click", (event) => {
+            var xhr = new XMLHttpRequest();
+            xhr.open('DELETE', '/api/delete/file/by/id/' + '{{file.id}}/{{curr_task.id}}', false);
+            xhr.setRequestHeader('Authorization', 'Bearer ' + jwtoken);
+            xhr.send();
+            window.location.reload();
+        })
 
 
-        </form>
-        {% for file in files%}
-        <!--todo отображение файла-->
-        {% endfor %}
-        {%endif%}
+
+                </script>
+                <br>
+                {% endfor %}
+                <br>
+                <br>
+
+            </form>
+
+            {%endif%}
+        </div>
     </div>
-</div>
-{% endblock %}
+    {% endblock %}
