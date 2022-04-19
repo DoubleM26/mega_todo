@@ -11,12 +11,6 @@ from data.Task import Task
 import datetime as dt
 
 UPLOAD_FOLDER = './saved_files'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
-
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 blueprint = flask.Blueprint(
@@ -144,22 +138,19 @@ def create_new_task():
 @blueprint.route('/api/tasks/delete/<int:task_id>', methods=["DELETE"])
 @jwt_required
 def delete_task(task_id):
-    print("curr_task:", task_id)
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.email == get_jwt_identity()["email"]).first()
     task = db_sess.query(Task).filter(Task.id == task_id).first()
     if not task:
         return jsonify({"error": "Task does not exists"})
+
+    # удаляем все файлы
+    for file_id in task.files.split():
+        file = db_sess.query(File).filter(File.id == file_id).first()
+        os.remove("saved_files/" + file.filename)
     db_sess.query(Task).filter_by(id=task_id).delete()
     db_sess.commit()
-    print(user.tasks)
-
-    print(type(user.tasks))
     user.tasks = user.tasks.replace(str(task.id), "", 1)
-    # data = user.tasks.split()
-    # data.remove(str(task.id))
-    # user.tasks = data
-    print("user_tasks: ", user.tasks)
     db_sess.commit()
     return jsonify({"message": "success"})
 
@@ -216,8 +207,6 @@ def add_files(task_id):
         file = request.files[file_name]
         if file.filename == '':
             return jsonify({'error': 'No selected file'})
-        if file.filename.split(".")[-1] not in ALLOWED_EXTENSIONS:
-            return jsonify({"error": "Not allowed file extension"})
     for file_name in request.files.keys():
         file = request.files[file_name]
 

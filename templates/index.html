@@ -109,7 +109,7 @@
                 </div>
                 {% endfor %}
                 {% for file in files%}
-                <a href="/get_file/{{file.filename}}" download="">файл_{{file.id}}</a>
+                <a href="/get_file/{{file.filename}}" download="">файл{{file.filename}}</a>
                 <img src="./../static/img/trash_bin.png" style="height: 16px; margin-left: 4px" id="file{{file.id}}">
                 <script>
 

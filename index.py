@@ -15,7 +15,7 @@ from data import db_session, api
 from data.User import User
 from data.Task import Task
 from data.File import File
-from data.api import create_jwt_for_user, UPLOAD_FOLDER, ALLOWED_EXTENSIONS, allowed_file
+from data.api import create_jwt_for_user, UPLOAD_FOLDER
 from forms.registerform import RegisterForm
 from forms.taskchangeform import TaskChangeForm
 
@@ -146,32 +146,33 @@ def first_handler(task_name=None):
         db_sess.commit()
         return redirect("/")
 
-    file = request.files['file']
+    for file in form.file.data:
+        print("file", file)
 
-    if file.filename == '':
-        flash('No selected file')
-        db_sess.commit()
-        return redirect("/")
+        if file.filename == '':
+            flash('No selected file')
+            db_sess.commit()
+            return redirect("/")
 
-    if file and allowed_file(file.filename):
-        curr_task = db_sess.query(Task).filter(Task.id == task_name).first()
-        sess_file = File()
-        db_sess.add(sess_file)
-        sess_file.extension = file.filename.split(".")[-1]
-        db_sess.commit()
-        file.filename = str(sess_file.id) + "." + sess_file.extension
-        sess_file.filename = file.filename
-        print("-------", str(sess_file.id))
-        open(app.config['UPLOAD_FOLDER'] + "/" + str(sess_file.id) + "." + sess_file.extension,
-             "wb").close()
-        file.save(app.config['UPLOAD_FOLDER'] + "/" + str(sess_file.id) + "." + sess_file.extension)
-        print("-----------")
-        print("curr", curr_task.files)
-        if curr_task.files is None:
-            curr_task.files = str(sess_file.id)
-        else:
-            curr_task.files += " " + str(sess_file.id)
-        db_sess.commit()
+        if file:
+            curr_task = db_sess.query(Task).filter(Task.id == task_name).first()
+            sess_file = File()
+            db_sess.add(sess_file)
+            sess_file.extension = file.filename.split(".")[-1]
+            db_sess.commit()
+            file.filename = str(sess_file.id) + "." + sess_file.extension
+            sess_file.filename = file.filename
+            print("-------", str(sess_file.id))
+            open(app.config['UPLOAD_FOLDER'] + "/" + str(sess_file.id) + "." + sess_file.extension,
+                 "wb").close()
+            file.save(app.config['UPLOAD_FOLDER'] + "/" + str(sess_file.id) + "." + sess_file.extension)
+            print("-----------")
+            print("curr", curr_task.files)
+            if curr_task.files is None:
+                curr_task.files = str(sess_file.id)
+            else:
+                curr_task.files += " " + str(sess_file.id)
+            db_sess.commit()
 
     if curr_task.complete:
         db_sess.commit()
