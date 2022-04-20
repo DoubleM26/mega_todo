@@ -12,7 +12,6 @@ import datetime as dt
 
 UPLOAD_FOLDER = './saved_files'
 
-
 blueprint = flask.Blueprint(
     'api',
     __name__,
@@ -145,12 +144,19 @@ def delete_task(task_id):
         return jsonify({"error": "Task does not exists"})
 
     # удаляем все файлы
-    for file_id in task.files.split():
+    file_id_list = task.files.split()
+    print("file_id_list", file_id_list)
+    for file_id in file_id_list:
         file = db_sess.query(File).filter(File.id == file_id).first()
         os.remove("saved_files/" + file.filename)
-    db_sess.query(Task).filter_by(id=task_id).delete()
-    db_sess.commit()
+    print("file_id_list", file_id_list)
+    for file_id in file_id_list:
+        db_sess.query(File).filter_by(id=file_id).delete()
+        db_sess.commit()
+
     user.tasks = user.tasks.replace(str(task.id), "", 1)
+    db_sess.commit()
+    db_sess.query(Task).filter_by(id=task_id).delete()
     db_sess.commit()
     return jsonify({"message": "success"})
 
@@ -163,14 +169,14 @@ def change_task(task_id):
     if not task:
         return jsonify({"error": "Task not found"})
     # добавляем параметры, если они есть
-    # if "complete" in request.json.keys():
-    #     task.complete = request.json['complete']
-    # if "description" in request.json.keys():
-    #     task.description = request.json['description']
-    # if "deadline" in request.json.keys():
-    #     task.deadline = request.json['deadline']
-    # if "files" in request.json.keys():
-    #     task.files = request.json['files']
+    if "complete" in request.json.keys():
+        task.complete = request.json['complete']
+    if "description" in request.json.keys():
+        task.description = request.json['description']
+    if "deadline" in request.json.keys():
+        task.deadline = request.json['deadline']
+    if "files" in request.json.keys():
+        task.files = request.json['files']
     task.complete = not task.complete
     db_sess.commit()
     return jsonify({"message": "success"})
@@ -285,6 +291,8 @@ def delete_file_by_id(file_id, task_id):
     if str(task.id) not in user.tasks:
         return jsonify({"error": "This user has no access to this task"})
     task.files = task.files.replace(str(file_id), "", 1)
+
     db_sess.commit()
     os.remove("saved_files/" + file.filename)
+    db_sess.query(File).filter_by(id=file_id).delete()
     return jsonify({"message": "success"})
