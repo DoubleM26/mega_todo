@@ -109,6 +109,14 @@ def create_new_task():
         return jsonify({"error": "Task already exists"})
     task = Task()
     task.title = request.json['title']
+    if "complete" in request.json.keys():
+        task.complete = request.json['complete']
+    if "description" in request.json.keys():
+        task.description = request.json['description']
+    if "deadline" in request.json.keys():
+        task.deadline = request.json['deadline']
+    if "files" in request.json.keys():
+        task.files = request.json['files']
 
     db_sess.add(task)
     db_sess.commit()
@@ -150,14 +158,14 @@ def change_task(task_id):
     if not task:
         return jsonify({"error": "Task not found"})
     # добавляем параметры, если они есть
-    if "complete" in request.json.keys():
-        task.complete = request.json['complete']
-    if "description" in request.json.keys():
-        task.description = request.json['description']
-    if "deadline" in request.json.keys():
-        task.deadline = request.json['deadline']
-    if "files" in request.json.keys():
-        task.files = request.json['files']
+    # if "complete" in request.json.keys():
+    #     task.complete = request.json['complete']
+    # if "description" in request.json.keys():
+    #     task.description = request.json['description']
+    # if "deadline" in request.json.keys():
+    #     task.deadline = request.json['deadline']
+    # if "files" in request.json.keys():
+    #     task.files = request.json['files']
     task.complete = not task.complete
     db_sess.commit()
     return jsonify({"message": "success"})
