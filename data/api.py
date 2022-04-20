@@ -1,7 +1,7 @@
 import os
 
 import flask
-from flask import jsonify, request, make_response, send_file
+from flask import jsonify, request, send_file
 from flask_jwt_simple import create_jwt, jwt_required
 from flask_jwt_simple import get_jwt_identity
 from data import db_session
@@ -25,12 +25,11 @@ def check_keys(dct, keys):
 
 def create_jwt_for_user(user):
     cp_user = {"name": user.name, "email": user.email}
-    j_token = {'token': create_jwt(identity=cp_user)}  # создаем jwt токен
+    j_token = {'token': create_jwt(identity=cp_user)}
     return jsonify(j_token)
 
 
-# ----получение всех пользователей----
-@blueprint.route('/api/users')
+@blueprint.route('/api/users', methods=["GET"])
 def get_users():
     session = db_session.create_session()
     users = session.query(User).all()
@@ -43,7 +42,6 @@ def get_users():
     )
 
 
-# ----регистрация нового пользователя----
 @blueprint.route('/api/register', methods=["POST"])
 def registrate_user():
     in_json = request.json
@@ -67,12 +65,10 @@ def registrate_user():
         return jsonify({"error": "Bad request"})
 
 
-# ----авторизация зарегистрированного пользователя----
 @blueprint.route('/api/login', methods=["GET"])
 def login_user():
-    in_json = request.json  # получаем json, отправленный клиентом (словарь)
-    # request - запрос
-    if not in_json:  # если в json пусто
+    in_json = request.json
+    if not in_json:
         return jsonify({"error": "Empty request"})
     elif not check_keys(in_json, ("email", 'password')):
         return jsonify({"error": "Bad request"})
@@ -83,7 +79,6 @@ def login_user():
     return create_jwt_for_user(user)
 
 
-# ----получить задачи пользоваателя----
 @blueprint.route('/api/users/tasks', methods=["GET"])
 @jwt_required
 def get_user_tasks():
@@ -92,9 +87,7 @@ def get_user_tasks():
     user = db_sess.query(User).filter(User.email == get_jwt_identity()["email"]).first()
 
     for task_id in user.tasks.split():
-        print(task_id)
         task = db_sess.query(Task).filter(Task.id == int(task_id)).first()
-        print(task)
         tasks_data.append({"id": task.id, "title": task.title, "complete": task.complete,
                            "description": task.description, "creation_date": task.creation_date,
                            "deadline": task.deadline, "files": task.files})
@@ -142,14 +135,11 @@ def delete_task(task_id):
     task = db_sess.query(Task).filter(Task.id == task_id).first()
     if not task:
         return jsonify({"error": "Task does not exists"})
-
     # удаляем все файлы
     file_id_list = task.files.split()
-    print("file_id_list", file_id_list)
     for file_id in file_id_list:
         file = db_sess.query(File).filter(File.id == file_id).first()
         os.remove("saved_files/" + file.filename)
-    print("file_id_list", file_id_list)
     for file_id in file_id_list:
         db_sess.query(File).filter_by(id=file_id).delete()
         db_sess.commit()
@@ -185,7 +175,6 @@ def change_task(task_id):
 @blueprint.route('/api/tasks/by_date/<date>', methods=["GET"])
 @jwt_required
 def get_tasks_by_date(date):
-    print(date)
     db_sess = db_session.create_session()
     tasks_data = []
     user = db_sess.query(User).filter(User.email == get_jwt_identity()["email"]).first()
@@ -222,13 +211,10 @@ def add_files(task_id):
         db_sess.commit()
         file.filename = str(sess_file.id) + "." + sess_file.extension
         sess_file.filename = file.filename
-        print("-------", str(sess_file.id))
         open(UPLOAD_FOLDER + "/" + str(sess_file.id) + "." + sess_file.extension,
              "wb").close()
         file.save(
             UPLOAD_FOLDER + "/" + str(sess_file.id) + "." + sess_file.extension)
-        print("-----------")
-        print("curr", task.files)
         if task.files is None:
             task.files = str(sess_file.id)
         else:

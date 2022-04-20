@@ -1,12 +1,8 @@
-import os
 from datetime import timedelta
 
-from flask import Flask, make_response, jsonify, render_template, request, url_for, flash, send_file
-from flask_jwt_simple import JWTManager, jwt_required, get_jwt_identity
-from flask_restful import Api
-from werkzeug.utils import redirect, secure_filename
-
-from data.api import check_keys, create_jwt_for_user
+from flask import Flask, make_response, jsonify, render_template, request, flash, send_file
+from flask_jwt_simple import JWTManager
+from werkzeug.utils import redirect
 from forms.login import LoginForm
 from forms.name_change import NameChangeForm
 from forms.add_task import AddTask
@@ -19,15 +15,12 @@ from data.api import create_jwt_for_user, UPLOAD_FOLDER
 from forms.registerform import RegisterForm
 from forms.taskchangeform import TaskChangeForm
 
-
-
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'aboba'
-app.config["JWT_SECRET_KEY"] = "super-secret"  # секретный ключ для токенов
-app.config["JWT_EXPIRES"] = timedelta(hours=24)  # сколько действителен jwt токен
-app.config["JWT_IDENTITY_CLAIM"] = 'user'  # заголовок, где хранится информация о пользователе
-app.config["JWT_HEADER_NAME"] = 'authorization'  # заголовок, куда передается токен при действиях
+app.config["JWT_SECRET_KEY"] = "super-secret"
+app.config["JWT_EXPIRES"] = timedelta(hours=24)
+app.config["JWT_IDENTITY_CLAIM"] = 'user'
+app.config["JWT_HEADER_NAME"] = 'authorization'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.jwt = JWTManager(app)
 login_manager = LoginManager()
@@ -38,9 +31,6 @@ login_manager.init_app(app)
 def load_user(user_id):
     db_sess = db_session.create_session()
     return db_sess.query(User).get(user_id)
-
-
-
 
 
 @app.route('/')
@@ -64,17 +54,14 @@ def default():
            defaults={'search_data': "", 'complete': False, 'task_id': None})
 def main(search_data, complete, task_id):
     curr_task = None
-    print(task_id, "f")
     if task_id is not None:
         db_sess = db_session.create_session()
 
         user = db_sess.query(User).filter(User.id == current_user.id).first()
         for i in user.tasks.split():
             task = db_sess.query(Task).filter(Task.id == int(i)).first()
-            # print(task.id)
             if task.id == task_id:
                 curr_task = task
-                print(curr_task.title)
 
     change_task_form = TaskChangeForm()
     change_task_form.title = "Maga ToDo"
@@ -102,13 +89,11 @@ def main(search_data, complete, task_id):
         user.tasks += " " + str(task.id)
         db_sess.commit()
         return redirect("/")
-        # user = db_sess.query(User).filter(User.id == current_user.id).first()
     if not complete:
         classes = ["nav-link active", "nav-link", "nav-link"]
     else:
         classes = ["nav-link", "nav-link", "nav-link active"]
 
-    #
     files = []
     if curr_task is not None:
         for i in curr_task.files.split():
@@ -139,15 +124,12 @@ def first_handler(task_name=None):
     curr_task.deadline = form.date.data
     curr_task.description = form.description.data
 
-    # --
-
     if 'file' not in request.files:
         flash('No file part')
         db_sess.commit()
         return redirect("/")
 
     for file in form.file.data:
-        print("file", file)
 
         if file.filename == '':
             flash('No selected file')
@@ -162,12 +144,10 @@ def first_handler(task_name=None):
             db_sess.commit()
             file.filename = str(sess_file.id) + "." + sess_file.extension
             sess_file.filename = file.filename
-            print("-------", str(sess_file.id))
             open(app.config['UPLOAD_FOLDER'] + "/" + str(sess_file.id) + "." + sess_file.extension,
                  "wb").close()
-            file.save(app.config['UPLOAD_FOLDER'] + "/" + str(sess_file.id) + "." + sess_file.extension)
-            print("-----------")
-            print("curr", curr_task.files)
+            file.save(
+                app.config['UPLOAD_FOLDER'] + "/" + str(sess_file.id) + "." + sess_file.extension)
             if curr_task.files is None:
                 curr_task.files = str(sess_file.id)
             else:
@@ -240,7 +220,6 @@ def settings():
     if form.validate_on_submit():
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.id == current_user.id).first()
-        print(form.name.data)
         user.name = form.name.data
         db_sess.commit()
         return redirect('/settings')
